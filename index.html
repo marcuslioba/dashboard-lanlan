@@ -1,344 +1,2084 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login - Sistema Financeiro Igreja</title>
+  <meta charset="UTF-8" />
+  <!-- Viewport configurado para mobile-first: escala 1:1 em celulares -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>PãoFácil PDV</title>
+
+  <!-- Google Fonts: Sora (display/títulos) + DM Sans (corpo de texto) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
   <style>
-    * {
+    /* ============================================================
+       DESIGN TOKENS (VARIÁVEIS CSS GLOBAIS)
+       Altere aqui para mudar toda a paleta do sistema de uma vez.
+       ============================================================ */
+    :root {
+      --cor-fundo:        #F5F0E8;      /* Bege quente – remete a farinha */
+      --cor-fundo-card:   #FFFFFF;
+      --cor-primaria:     #C8410A;      /* Laranja-tijolo – cor da padaria */
+      --cor-primaria-esc: #A33308;      /* Tom mais escuro para hover */
+      --cor-secundaria:   #2D6A4F;      /* Verde para cashback/dinheiro */
+      --cor-secundaria-cl:#D8F3DC;      /* Verde clarinho para badges */
+      --cor-texto:        #1A1A1A;
+      --cor-texto-suave:  #6B6B6B;
+      --cor-borda:        #E0D8CC;
+      --cor-danger:       #D62828;
+      --cor-nav:          #FFFFFF;
+      --altura-nav:       68px;         /* Altura da barra de navegação inferior */
+      --raio:             14px;
+      --sombra:           0 2px 16px rgba(0,0,0,0.08);
+      --sombra-forte:     0 4px 24px rgba(0,0,0,0.14);
+      --transicao:        0.22s ease;
+    }
+
+    /* ============================================================
+       RESET E BASE
+       ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
     }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cor-fundo);
+      color: var(--cor-texto);
+      -webkit-tap-highlight-color: transparent; /* Remove flash azul no toque mobile */
+      overscroll-behavior: none;
     }
-    
-    .login-container {
-      display: flex;
-      width: 900px;
-      height: 500px;
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    }
-    
-    .left-panel {
-      flex: 1;
-      background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
-      color: white;
-      padding: 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
-    
-    .left-panel h1 {
-      font-size: 2.5rem;
-      margin-bottom: 20px;
-    }
-    
-    .left-panel p {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      max-width: 350px;
-      opacity: 0.9;
-    }
-    
-    .right-panel {
-      flex: 1;
-      padding: 50px 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .right-panel h2 {
-      color: #333;
-      margin-bottom: 10px;
-      font-size: 2rem;
-    }
-    
-    .right-panel p {
-      color: #777;
-      margin-bottom: 30px;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #555;
-    }
-    
-    input {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font-size: 1rem;
-      transition: all 0.3s;
-    }
-    
-    input:focus {
-      border-color: #2575fc;
-      box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
-      outline: none;
-    }
-    
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
+
+    /* Botão base sem estilo padrão */
+    button {
+      font-family: inherit;
       cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 15px;
+      border: none;
+      background: none;
     }
-    
-    .btn-primary {
-      background: #2575fc;
-      color: white;
+
+    input, select, textarea {
+      font-family: inherit;
     }
-    
-    .btn-primary:hover {
-      background: #1a68e8;
+
+    /* ============================================================
+       LAYOUT PRINCIPAL – SPA (Single Page Application)
+       O conteúdo fica acima da barra de nav inferior.
+       ============================================================ */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;          /* dvh = dynamic viewport height (melhor em mobile) */
+      overflow: hidden;
+    }
+
+    /* Área de conteúdo rolável */
+    #conteudo {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: calc(var(--altura-nav) + 8px);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ============================================================
+       CABEÇALHO DAS TELAS
+       ============================================================ */
+    .tela-header {
+      background: var(--cor-primaria);
+      color: #fff;
+      padding: 20px 16px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .tela-header h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .tela-header p {
+      font-size: 0.8rem;
+      opacity: 0.82;
+      margin-top: 2px;
+    }
+
+    /* ============================================================
+       BARRA DE NAVEGAÇÃO INFERIOR (BOTTOM NAV)
+       Fixa na parte inferior, estilo app nativo.
+       ============================================================ */
+    #bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--altura-nav);
+      background: var(--cor-nav);
+      border-top: 1px solid var(--cor-borda);
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+    }
+
+    /* Cada botão de aba na nav */
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px 4px;
+      color: var(--cor-texto-suave);
+      transition: color var(--transicao), background var(--transicao);
+      border-radius: 0;
+      position: relative;
+    }
+
+    .nav-btn:active {
+      background: var(--cor-fundo);
+    }
+
+    /* Ícone SVG dentro do botão de nav */
+    .nav-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 1.8;
+      transition: stroke var(--transicao), transform var(--transicao);
+    }
+
+    /* Texto da aba */
+    .nav-btn span {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    /* Estado ATIVO da aba */
+    .nav-btn.ativo {
+      color: var(--cor-primaria);
+    }
+
+    .nav-btn.ativo svg {
       transform: translateY(-2px);
     }
-    
-    .btn-secondary {
-      background: #f0f2f5;
-      color: #555;
+
+    /* Linha indicadora no topo do botão ativo */
+    .nav-btn.ativo::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20%;
+      right: 20%;
+      height: 3px;
+      background: var(--cor-primaria);
+      border-radius: 0 0 4px 4px;
     }
-    
-    .btn-secondary:hover {
-      background: #e4e6e9;
+
+    /* Badge de contador no carrinho */
+    .nav-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      background: var(--cor-primaria);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      opacity: 0;
+      transform: scale(0);
+      transition: opacity var(--transicao), transform var(--transicao);
     }
-    
-    .links {
+
+    .nav-badge.visivel {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* ============================================================
+       TELAS – mostradas/escondidas pela lógica de SPA
+       ============================================================ */
+    .tela {
+      display: none;
+      animation: fadeIn 0.18s ease;
+    }
+
+    .tela.ativa {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       COMPONENTES REUTILIZÁVEIS
+       ============================================================ */
+
+    /* Card branco com sombra */
+    .card {
+      background: var(--cor-fundo-card);
+      border-radius: var(--raio);
+      box-shadow: var(--sombra);
+      padding: 16px;
+      margin: 12px 12px 0;
+    }
+
+    /* Botão primário (laranja) */
+    .btn-primario {
+      background: var(--cor-primaria);
+      color: #fff;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Sora', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      transition: background var(--transicao), transform var(--transicao), box-shadow var(--transicao);
+      box-shadow: 0 4px 12px rgba(200,65,10,0.3);
+    }
+
+    .btn-primario:active {
+      background: var(--cor-primaria-esc);
+      transform: scale(0.98);
+      box-shadow: 0 2px 6px rgba(200,65,10,0.2);
+    }
+
+    .btn-primario:disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* Botão secundário (verde) */
+    .btn-verde {
+      background: var(--cor-secundaria);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background var(--transicao), transform var(--transicao);
+    }
+
+    .btn-verde:active {
+      background: #1B4332;
+      transform: scale(0.98);
+    }
+
+    /* Botão outline (borda) */
+    .btn-outline {
+      border: 2px solid var(--cor-primaria);
+      color: var(--cor-primaria);
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background var(--transicao), color var(--transicao);
+    }
+
+    .btn-outline:active {
+      background: var(--cor-primaria);
+      color: #fff;
+    }
+
+    /* Campo de input padrão */
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .campo label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--cor-texto-suave);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .campo input,
+    .campo select {
+      background: var(--cor-fundo);
+      border: 1.5px solid var(--cor-borda);
+      border-radius: 10px;
+      padding: 13px 14px;
+      font-size: 0.95rem;
+      color: var(--cor-texto);
+      transition: border-color var(--transicao);
+      outline: none;
+      width: 100%;
+    }
+
+    .campo input:focus,
+    .campo select:focus {
+      border-color: var(--cor-primaria);
+    }
+
+    /* Checkbox com estilo customizado */
+    .campo-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--cor-fundo);
+      border: 1.5px solid var(--cor-borda);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color var(--transicao), background var(--transicao);
+    }
+
+    .campo-check:has(input:checked) {
+      border-color: var(--cor-secundaria);
+      background: var(--cor-secundaria-cl);
+    }
+
+    .campo-check input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--cor-secundaria);
+      cursor: pointer;
+    }
+
+    .campo-check span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Título de seção */
+    .secao-titulo {
+      font-family: 'Sora', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--cor-texto-suave);
+      padding: 16px 14px 6px;
+    }
+
+    /* Badge de status */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .badge-verde {
+      background: var(--cor-secundaria-cl);
+      color: var(--cor-secundaria);
+    }
+
+    .badge-cinza {
+      background: #EBEBEB;
+      color: #666;
+    }
+
+    /* Divisor */
+    .divisor {
+      height: 1px;
+      background: var(--cor-borda);
+      margin: 12px 0;
+    }
+
+    /* Mensagem de lista vazia */
+    .lista-vazia {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--cor-texto-suave);
+    }
+
+    .lista-vazia svg {
+      opacity: 0.3;
+      margin-bottom: 12px;
+    }
+
+    .lista-vazia p {
+      font-size: 0.9rem;
+    }
+
+    /* Toast de notificação */
+    #toast {
+      position: fixed;
+      bottom: calc(var(--altura-nav) + 16px);
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1A1A1A;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 999;
+      pointer-events: none;
+      max-width: 90vw;
+      text-align: center;
+      white-space: normal;
+    }
+
+    #toast.visivel {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #toast.toast-sucesso { background: var(--cor-secundaria); }
+    #toast.toast-erro    { background: var(--cor-danger); }
+
+    /* Modal/Overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--transicao);
+    }
+
+    .modal-overlay.aberto {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-box {
+      background: var(--cor-fundo-card);
+      border-radius: var(--raio) var(--raio) 0 0;
+      padding: 20px 16px;
+      width: 100%;
+      max-height: 90dvh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-overlay.aberto .modal-box {
+      transform: translateY(0);
+    }
+
+    .modal-titulo {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    /* ============================================================
+       TELA 1 – PDV (FRENTE DE CAIXA)
+       ============================================================ */
+
+    /* Campo de busca de produto */
+    .pdv-busca {
+      padding: 12px 12px 0;
+    }
+
+    .pdv-busca input {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      border: 1.5px solid var(--cor-borda);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 14px center;
+      outline: none;
+      transition: border-color var(--transicao);
+    }
+
+    .pdv-busca input:focus {
+      border-color: var(--cor-primaria);
+    }
+
+    /* Grid de produtos – 2 colunas em mobile */
+    #grid-produtos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 10px 12px;
+    }
+
+    /* Card de produto no grid */
+    .produto-card {
+      background: var(--cor-fundo-card);
+      border: 1.5px solid var(--cor-borda);
+      border-radius: var(--raio);
+      padding: 14px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transicao), transform var(--transicao), box-shadow var(--transicao);
+      box-shadow: var(--sombra);
+      user-select: none;
+    }
+
+    .produto-card:active {
+      transform: scale(0.96);
+      border-color: var(--cor-primaria);
+      box-shadow: var(--sombra-forte);
+    }
+
+    .produto-card-emoji {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .produto-card-nome {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--cor-texto);
+      line-height: 1.2;
+    }
+
+    .produto-card-preco {
+      font-family: 'Sora', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--cor-primaria);
+    }
+
+    .produto-card-badge {
+      font-size: 0.62rem;
+      background: var(--cor-secundaria-cl);
+      color: var(--cor-secundaria);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 700;
+    }
+
+    /* ---- PAINEL DE CLIENTE ---- */
+    .painel-cliente {
+      background: var(--cor-fundo-card);
+      border-radius: var(--raio);
+      margin: 0 12px;
+      padding: 14px;
+      box-shadow: var(--sombra);
+    }
+
+    .painel-cliente-titulo {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--cor-texto-suave);
+      margin-bottom: 10px;
+    }
+
+    .cliente-busca-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .cliente-busca-row input {
+      flex: 1;
+      padding: 11px 14px;
+      border: 1.5px solid var(--cor-borda);
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color var(--transicao);
+    }
+
+    .cliente-busca-row input:focus {
+      border-color: var(--cor-primaria);
+    }
+
+    .cliente-busca-row button {
+      background: var(--cor-primaria);
+      color: #fff;
+      border-radius: 10px;
+      padding: 0 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: background var(--transicao);
+    }
+
+    .cliente-busca-row button:active {
+      background: var(--cor-primaria-esc);
+    }
+
+    /* Info do cliente encontrado */
+    #info-cliente {
+      margin-top: 12px;
+      display: none;
+    }
+
+    .cliente-info-card {
+      background: var(--cor-fundo);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cliente-info-nome {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .cliente-info-saldo {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--cor-secundaria);
+    }
+
+    .cliente-info-saldo span {
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    /* Toggle de usar cashback */
+    .cashback-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--cor-secundaria-cl);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .cashback-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--cor-secundaria);
+      cursor: pointer;
+    }
+
+    .cashback-toggle label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--cor-secundaria);
+      cursor: pointer;
+    }
+
+    /* ---- CARRINHO ---- */
+    #lista-carrinho {
+      padding: 0 12px;
+    }
+
+    .carrinho-item {
+      background: var(--cor-fundo-card);
+      border-radius: var(--raio);
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--sombra);
+    }
+
+    .carrinho-item-nome {
+      flex: 1;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .carrinho-item-preco {
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--cor-primaria);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    /* Controles de quantidade (+/-) */
+    .qtd-controle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .qtd-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--cor-fundo);
+      border: 1.5px solid var(--cor-borda);
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cor-texto);
+      transition: background var(--transicao);
+      flex-shrink: 0;
+    }
+
+    .qtd-btn:active {
+      background: var(--cor-borda);
+    }
+
+    .qtd-valor {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* ---- RESUMO DE FECHAMENTO ---- */
+    .resumo-venda {
+      background: var(--cor-fundo-card);
+      border-radius: var(--raio) var(--raio) 0 0;
+      padding: 16px 16px 8px;
+      margin: 0 12px;
+      box-shadow: var(--sombra-forte);
+    }
+
+    .resumo-linha {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
-    }
-    
-    .links a {
-      color: #2575fc;
-      text-decoration: none;
+      padding: 6px 0;
       font-size: 0.9rem;
     }
-    
-    .links a:hover {
-      text-decoration: underline;
+
+    .resumo-linha.destaque {
+      border-top: 2px solid var(--cor-borda);
+      margin-top: 6px;
+      padding-top: 10px;
     }
-    
-    .notification {
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+
+    .resumo-linha.destaque .resumo-valor {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--cor-primaria);
+    }
+
+    .resumo-linha.cashback-linha .resumo-valor {
+      color: var(--cor-secundaria);
+      font-weight: 700;
+    }
+
+    .resumo-label {
+      color: var(--cor-texto-suave);
+    }
+
+    .resumo-valor {
+      font-weight: 600;
+    }
+
+    /* Botão de finalizar venda */
+    .btn-finalizar {
+      margin: 10px 12px 0;
+    }
+
+    /* ============================================================
+       TELA 2 – PRODUTOS & CATEGORIAS
+       ============================================================ */
+
+    /* Abas internas (Categorias / Produtos) */
+    .abas-internas {
+      display: flex;
+      gap: 0;
+      padding: 12px 12px 0;
+    }
+
+    .aba-interna-btn {
+      flex: 1;
+      padding: 11px 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--cor-texto-suave);
+      border-bottom: 2px solid var(--cor-borda);
+      transition: color var(--transicao), border-color var(--transicao);
+      text-align: center;
+    }
+
+    .aba-interna-btn.ativa {
+      color: var(--cor-primaria);
+      border-bottom-color: var(--cor-primaria);
+    }
+
+    .aba-interna-conteudo {
       display: none;
     }
-    
-    .notification.error {
-      background: #ffebee;
-      color: #c62828;
-      border: 1px solid #ffcdd2;
+
+    .aba-interna-conteudo.ativa {
+      display: block;
     }
-    
-    .notification.success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      border: 1px solid #c8e6c9;
+
+    /* Item de lista (produto ou categoria) */
+    .lista-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--cor-borda);
+      gap: 10px;
     }
-    
-    .logo {
-      font-size: 2.5rem;
+
+    .lista-item:last-child {
+      border-bottom: none;
+    }
+
+    .lista-item-info {
+      flex: 1;
+    }
+
+    .lista-item-nome {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .lista-item-sub {
+      font-size: 0.75rem;
+      color: var(--cor-texto-suave);
+      margin-top: 2px;
+    }
+
+    .lista-item-preco {
+      font-family: 'Sora', sans-serif;
       font-weight: 700;
-      margin-bottom: 20px;
+      color: var(--cor-primaria);
+      font-size: 0.95rem;
     }
-    
-    @media (max-width: 768px) {
-      .login-container {
-        flex-direction: column;
-        height: auto;
-        width: 100%;
+
+    .btn-excluir {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #FFECEC;
+      color: var(--cor-danger);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background var(--transicao);
+    }
+
+    .btn-excluir:active {
+      background: #FFC5C5;
+    }
+
+    /* ============================================================
+       TELA 3 – CLIENTES & CASHBACK
+       ============================================================ */
+
+    .cliente-card {
+      background: var(--cor-fundo-card);
+      border-radius: var(--raio);
+      padding: 16px;
+      margin: 0 12px 10px;
+      box-shadow: var(--sombra);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cliente-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--cor-primaria);
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .cliente-card-info {
+      flex: 1;
+    }
+
+    .cliente-card-nome {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .cliente-card-tel {
+      font-size: 0.78rem;
+      color: var(--cor-texto-suave);
+      margin-top: 2px;
+    }
+
+    .cliente-card-saldo {
+      text-align: right;
+    }
+
+    .cliente-saldo-valor {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--cor-secundaria);
+    }
+
+    .cliente-saldo-label {
+      font-size: 0.7rem;
+      color: var(--cor-texto-suave);
+    }
+
+    /* Histórico de vendas do cliente */
+    .historico-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--cor-borda);
+    }
+
+    .historico-item:last-child {
+      border-bottom: none;
+    }
+
+    .historico-data {
+      font-size: 0.75rem;
+      color: var(--cor-texto-suave);
+    }
+
+    .historico-valores {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* ============================================================
+       SPINNER / LOADER
+       ============================================================ */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ============================================================
+       RESPONSIVIDADE – telas maiores (tablet/desktop)
+       ============================================================ */
+    @media (min-width: 480px) {
+      #grid-produtos {
+        grid-template-columns: repeat(3, 1fr);
       }
-      
-      .left-panel {
-        padding: 30px 20px;
+    }
+
+    @media (min-width: 700px) {
+      #app {
+        max-width: 480px;
+        margin: 0 auto;
+        box-shadow: var(--sombra-forte);
       }
-      
-      .right-panel {
-        padding: 30px 20px;
+
+      #bottom-nav {
+        max-width: 480px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      #toast {
+        max-width: 420px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="left-panel">
-      <div class="logo">⛪</div>
-      <h1>Sistema Financeiro Igreja</h1>
-      <p>Gerencie finanças, chamados e categorias de forma simples e eficiente</p>
-    </div>
-    
-    <div class="right-panel">
-      <h2>Bem-vindo</h2>
-      <p>Faça login para acessar o sistema</p>
-      
-      <div id="notif" class="notification"></div>
-      
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" type="email" placeholder="seu@email.com" />
+
+<!-- ============================================================
+     ESTRUTURA DO APP (SPA)
+     #app envolve tudo; #conteudo rola; #bottom-nav fica fixo.
+     ============================================================ -->
+<div id="app">
+
+  <!-- =============================================
+       CONTEÚDO DAS TELAS
+       ============================================= -->
+  <div id="conteudo">
+
+    <!-- ==========================================
+         TELA 1: PDV – FRENTE DE CAIXA
+         ========================================== -->
+    <section id="tela-pdv" class="tela ativa">
+
+      <!-- Cabeçalho -->
+      <div class="tela-header">
+        <h1>🥖 Frente de Caixa</h1>
+        <p>Selecione os produtos e finalize a venda</p>
       </div>
-      
-      <div class="form-group">
-        <label for="password">Senha</label>
-        <input id="password" type="password" placeholder="Senha" />
+
+      <!-- Identificação do cliente por telefone -->
+      <div style="padding: 12px 12px 0;">
+        <div class="painel-cliente">
+          <div class="painel-cliente-titulo">👤 Identificar Cliente</div>
+          <div class="cliente-busca-row">
+            <input type="tel" id="input-tel-cliente" placeholder="(88) 99999-9999" maxlength="15" />
+            <button onclick="buscarClientePorTelefone()">Buscar</button>
+          </div>
+
+          <!-- Área exibida quando cliente é encontrado -->
+          <div id="info-cliente">
+            <div class="cliente-info-card">
+              <div>
+                <div class="cliente-info-nome" id="cliente-nome-exibido">—</div>
+                <div style="font-size:0.75rem;color:var(--cor-texto-suave);">Cliente identificado</div>
+              </div>
+              <div>
+                <div class="cliente-info-saldo" id="cliente-saldo-exibido">R$ 0,00</div>
+                <div style="font-size:0.68rem;color:var(--cor-texto-suave);text-align:right;">saldo cashback</div>
+              </div>
+            </div>
+            <!-- Toggle: usar o cashback como desconto? -->
+            <div class="cashback-toggle">
+              <input type="checkbox" id="usar-cashback" />
+              <label for="usar-cashback">Usar cashback como desconto nesta compra</label>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <button id="loginBtn" class="btn btn-primary">Entrar</button>
-      <button id="signupBtn" class="btn btn-secondary">Criar Conta</button>
-      
-      <div class="links">
-        <a href="#" id="resetLink">Esqueci a senha</a>
-        <span></span>
+
+      <!-- Campo de busca de produto -->
+      <div class="pdv-busca">
+        <input type="text" id="busca-produto" placeholder="Buscar produto..." oninput="filtrarProdutos()" />
       </div>
-    </div>
-  </div>
 
-  <!-- Firebase compat SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+      <!-- Grid de produtos (renderizado via JS) -->
+      <div id="grid-produtos">
+        <!-- Preenchido dinamicamente pelo JavaScript -->
+      </div>
 
-  <script>
-    // Configuração Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDiLxDM7ottlE-59G5Gjtsyb_qYWNGF57g",
-      authDomain: "lagoinha-f73cc.firebaseapp.com",
-      projectId: "lagoinha-f73cc",
-      storageBucket: "lagoinha-f73cc.firebasestorage.app",
-      messagingSenderId: "657454722836",
-      appId: "1:657454722836:web:2ba3acd3c4712ccb609c01"
-    };
+      <!-- Título do carrinho -->
+      <div class="secao-titulo" id="titulo-carrinho" style="display:none;">
+        🛒 Carrinho
+      </div>
 
-    // Inicializa Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+      <!-- Lista de itens no carrinho (renderizada via JS) -->
+      <div id="lista-carrinho">
+        <!-- Preenchido dinamicamente -->
+      </div>
 
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    const resetLink = document.getElementById('resetLink');
-    const notif = document.getElementById('notif');
+      <!-- Resumo de fechamento da venda -->
+      <div id="resumo-venda" style="display:none;">
+        <div class="resumo-venda">
+          <div class="resumo-linha">
+            <span class="resumo-label">Subtotal</span>
+            <span class="resumo-valor" id="res-subtotal">R$ 0,00</span>
+          </div>
+          <!-- Linha de desconto cashback (oculta até usar cashback) -->
+          <div class="resumo-linha cashback-linha" id="res-linha-cashback" style="display:none;">
+            <span class="resumo-label">Desconto cashback</span>
+            <span class="resumo-valor" id="res-desconto">- R$ 0,00</span>
+          </div>
+          <div class="resumo-linha destaque">
+            <span style="font-weight:700;font-size:1rem;">Total a Pagar</span>
+            <span class="resumo-valor" id="res-total">R$ 0,00</span>
+          </div>
+          <div class="divisor"></div>
+          <div class="resumo-linha cashback-linha">
+            <span class="resumo-label">💰 Cashback gerado nesta venda</span>
+            <span class="resumo-valor" id="res-cashback-gerado" style="color:var(--cor-secundaria);">R$ 0,00</span>
+          </div>
+        </div>
 
-    function showNotification(message, type = 'error') {
-      notif.textContent = message;
-      notif.className = `notification ${type}`;
-      notif.style.display = 'block';
-      setTimeout(() => { notif.style.display = 'none'; }, 5000);
+        <!-- Botão de finalizar venda -->
+        <div class="btn-finalizar">
+          <button class="btn-primario" id="btn-finalizar" onclick="finalizarVenda()">
+            ✅ Finalizar Venda
+          </button>
+        </div>
+        <div style="height:16px;"></div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TELA 2: PRODUTOS & CATEGORIAS
+         ========================================== -->
+    <section id="tela-produtos" class="tela">
+
+      <div class="tela-header">
+        <h1>📦 Produtos & Categorias</h1>
+        <p>Gerencie seu cardápio</p>
+      </div>
+
+      <!-- Abas internas: Categorias | Produtos -->
+      <div class="abas-internas">
+        <button class="aba-interna-btn ativa" onclick="alternarAbaInterna('categorias', this)">Categorias</button>
+        <button class="aba-interna-btn" onclick="alternarAbaInterna('produtos-cat', this)">Produtos</button>
+      </div>
+
+      <!-- ---- ABA: CATEGORIAS ---- -->
+      <div id="aba-categorias" class="aba-interna-conteudo ativa">
+        <div class="card">
+          <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px;font-size:0.95rem;">
+            Nova Categoria
+          </div>
+          <div class="campo">
+            <label>Nome da Categoria</label>
+            <input type="text" id="input-nome-cat" placeholder="Ex: Pães, Doces, Bebidas..." />
+          </div>
+          <button class="btn-primario" onclick="salvarCategoria()">+ Adicionar Categoria</button>
+        </div>
+
+        <div class="secao-titulo">Categorias Cadastradas</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div id="lista-categorias">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- ABA: PRODUTOS ---- -->
+      <div id="aba-produtos-cat" class="aba-interna-conteudo">
+        <div class="card">
+          <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px;font-size:0.95rem;">
+            Novo Produto
+          </div>
+          <div class="campo">
+            <label>Nome do Produto</label>
+            <input type="text" id="input-nome-prod" placeholder="Ex: Pão de Queijo" />
+          </div>
+          <div class="campo">
+            <label>Preço de Venda (R$)</label>
+            <input type="number" id="input-preco-prod" placeholder="0,00" step="0.01" min="0" />
+          </div>
+          <div class="campo">
+            <label>Categoria</label>
+            <select id="select-cat-prod">
+              <option value="">Selecione uma categoria...</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label class="cashback-toggle" style="padding:12px 14px;background:var(--cor-fundo);border-radius:10px;border:1.5px solid var(--cor-borda);">
+              <input type="checkbox" id="check-gera-cashback" style="width:20px;height:20px;accent-color:var(--cor-secundaria);" />
+              <span style="font-size:0.88rem;font-weight:500;">💰 Produto gera/permite cashback</span>
+            </label>
+          </div>
+          <button class="btn-primario" onclick="salvarProduto()">+ Adicionar Produto</button>
+        </div>
+
+        <div class="secao-titulo">Produtos Cadastrados</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div id="lista-produtos-cat">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==========================================
+         TELA 3: CLIENTES & CASHBACK
+         ========================================== -->
+    <section id="tela-clientes" class="tela">
+
+      <div class="tela-header">
+        <h1>💰 Clientes & Cashback</h1>
+        <p>Cadastre e consulte clientes</p>
+      </div>
+
+      <!-- Formulário de novo cliente -->
+      <div class="card">
+        <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px;font-size:0.95rem;">
+          Novo Cliente
+        </div>
+        <div class="campo">
+          <label>Nome Completo</label>
+          <input type="text" id="input-nome-cliente" placeholder="Ex: Maria Silva" />
+        </div>
+        <div class="campo">
+          <label>Telefone (WhatsApp)</label>
+          <input type="tel" id="input-tel-novo-cliente" placeholder="(88) 99999-9999" maxlength="15" />
+        </div>
+        <button class="btn-primario" onclick="salvarCliente()">+ Cadastrar Cliente</button>
+      </div>
+
+      <!-- Busca de cliente para consultar saldo/histórico -->
+      <div class="card" style="padding:14px;">
+        <div class="painel-cliente-titulo">🔍 Consultar Cliente</div>
+        <div class="cliente-busca-row">
+          <input type="tel" id="input-tel-consulta" placeholder="(88) 99999-9999" maxlength="15" />
+          <button onclick="consultarCliente()">Buscar</button>
+        </div>
+        <div id="painel-consulta-cliente" style="margin-top:14px;display:none;">
+          <!-- Detalhes do cliente consultado -->
+        </div>
+      </div>
+
+      <!-- Lista de todos os clientes -->
+      <div class="secao-titulo">Clientes Cadastrados</div>
+      <div id="lista-clientes">
+        <!-- Renderizado via JS -->
+      </div>
+      <div style="height:12px;"></div>
+
+    </section>
+
+  </div><!-- /conteudo -->
+
+  <!-- ============================================================
+       BARRA DE NAVEGAÇÃO INFERIOR
+       3 botões: PDV | Produtos | Clientes
+       ============================================================ -->
+  <nav id="bottom-nav">
+
+    <!-- Botão: PDV -->
+    <button class="nav-btn ativo" onclick="navegarPara('pdv', this)">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 7.5M17 13l1.5 7.5M9 20.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Zm7 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/>
+      </svg>
+      <!-- Badge com quantidade de itens no carrinho -->
+      <div class="nav-badge" id="badge-carrinho">0</div>
+      <span>PDV</span>
+    </button>
+
+    <!-- Botão: Produtos -->
+    <button class="nav-btn" onclick="navegarPara('produtos', this)">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2ZM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+      </svg>
+      <span>Produtos</span>
+    </button>
+
+    <!-- Botão: Clientes -->
+    <button class="nav-btn" onclick="navegarPara('clientes', this)">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span>Clientes</span>
+    </button>
+
+  </nav>
+
+</div><!-- /app -->
+
+<!-- Toast de notificação (mensagens de feedback) -->
+<div id="toast"></div>
+
+<!-- ============================================================
+     FIREBASE SDK (importado via CDN – versão modular)
+     ============================================================ -->
+<script type="module">
+  // ============================================================
+  // IMPORTAÇÕES DO FIREBASE
+  // Usamos a versão modular (ESM) do Firebase v9+
+  // ============================================================
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    doc,
+    addDoc,
+    getDocs,
+    getDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    where,
+    orderBy,
+    onSnapshot,
+    runTransaction,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ============================================================
+  // CONFIGURAÇÃO DO FIREBASE
+  // Preencha com os dados do seu projeto no Firebase Console.
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTupG68ICzAvEYT3ZV_bUMDjhq4qM_mQw",
+    authDomain: "trialcrm-d0cf2.firebaseapp.com",
+    projectId: "trialcrm-d0cf2",
+    storageBucket: "trialcrm-d0cf2.firebasestorage.app",
+    messagingSenderId: "778451518436",
+    appId: "1:778451518436:web:bb15b2ccb1d5eb516bfdf1"
+  };
+
+  // Inicializa o app Firebase e o banco Firestore
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // ============================================================
+  // CONSTANTE GLOBAL: PERCENTUAL DE CASHBACK
+  // Altere este valor para mudar a porcentagem de cashback gerada.
+  // 0.05 = 5% | 0.03 = 3% | 0.10 = 10%
+  // ============================================================
+  const PERCENTUAL_CASHBACK = 0.05;
+
+  // ============================================================
+  // ESTADO LOCAL DA APLICAÇÃO
+  // Variáveis em memória que controlam o estado atual do app.
+  // ============================================================
+  let carrinho        = [];   // Array de itens adicionados ao carrinho
+  let clienteAtual    = null; // Objeto do cliente identificado no PDV
+  let produtosCache   = [];   // Cache dos produtos para filtragem rápida
+  let categoriasCache = [];   // Cache das categorias para montar selects
+
+  // ============================================================
+  // UTILITÁRIOS
+  // ============================================================
+
+  /** Formata número para moeda brasileira: 5.9 → "R$ 5,90" */
+  function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  /** Formata data ISO para exibição amigável */
+  function formatarData(timestamp) {
+    if (!timestamp) return '—';
+    const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  /** Exibe toast de notificação por 2,5 segundos */
+  function mostrarToast(msg, tipo = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'visivel' + (tipo ? ' toast-' + tipo : '');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+  }
+
+  /** Retorna as iniciais do nome para o avatar */
+  function iniciais(nome) {
+    return nome.trim().split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+  }
+
+  // ============================================================
+  // NAVEGAÇÃO ENTRE TELAS (SPA)
+  // Esconde todas as telas e exibe apenas a selecionada.
+  // ============================================================
+  function navegarPara(tela, btnClicado) {
+    // Oculta todas as telas
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    // Remove "ativo" de todos os botões de nav
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
+
+    // Exibe a tela correta e marca o botão como ativo
+    document.getElementById('tela-' + tela).classList.add('ativa');
+    btnClicado.classList.add('ativo');
+
+    // Rola de volta para o topo ao trocar de tela
+    document.getElementById('conteudo').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  // Expõe para uso no HTML (onclick="")
+  window.navegarPara = navegarPara;
+
+  // ============================================================
+  // ABAS INTERNAS (dentro de "Produtos & Categorias")
+  // ============================================================
+  function alternarAbaInterna(aba, btnClicado) {
+    // Oculta todos os conteúdos de aba interna
+    document.querySelectorAll('.aba-interna-conteudo').forEach(el => el.classList.remove('ativa'));
+    document.querySelectorAll('.aba-interna-btn').forEach(el => el.classList.remove('ativa'));
+
+    // Ativa a aba e botão selecionados
+    document.getElementById('aba-' + aba).classList.add('ativa');
+    btnClicado.classList.add('ativa');
+  }
+  window.alternarAbaInterna = alternarAbaInterna;
+
+  // ============================================================
+  // MÓDULO: CATEGORIAS
+  // ============================================================
+
+  /**
+   * Salva uma nova categoria no Firestore.
+   * Coleção: "categorias" → { nome: string }
+   */
+  async function salvarCategoria() {
+    const nomeInput = document.getElementById('input-nome-cat');
+    const nome = nomeInput.value.trim();
+    if (!nome) { mostrarToast('Informe o nome da categoria', 'erro'); return; }
+
+    try {
+      await addDoc(collection(db, 'categorias'), { nome });
+      nomeInput.value = '';
+      mostrarToast('Categoria adicionada! ✅', 'sucesso');
+    } catch (err) {
+      console.error('Erro ao salvar categoria:', err);
+      mostrarToast('Erro ao salvar. Verifique a conexão.', 'erro');
+    }
+  }
+  window.salvarCategoria = salvarCategoria;
+
+  /**
+   * Exclui uma categoria do Firestore.
+   * @param {string} id - ID do documento da categoria.
+   */
+  async function excluirCategoria(id) {
+    if (!confirm('Excluir esta categoria?')) return;
+    try {
+      await deleteDoc(doc(db, 'categorias', id));
+      mostrarToast('Categoria removida.', 'sucesso');
+    } catch (err) {
+      mostrarToast('Erro ao excluir.', 'erro');
+    }
+  }
+  window.excluirCategoria = excluirCategoria;
+
+  /**
+   * Renderiza a lista de categorias na tela.
+   * Chamado pelo listener em tempo real do Firestore.
+   */
+  function renderizarCategorias(docs) {
+    const el = document.getElementById('lista-categorias');
+    if (docs.length === 0) {
+      el.innerHTML = `<div class="lista-vazia">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
+        <p>Nenhuma categoria cadastrada.</p></div>`;
+      return;
     }
 
-    // Login
-    loginBtn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
+    el.innerHTML = docs.map(d => `
+      <div class="lista-item">
+        <div class="lista-item-info">
+          <div class="lista-item-nome">📁 ${d.nome}</div>
+        </div>
+        <button class="btn-excluir" onclick="excluirCategoria('${d.id}')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>`).join('');
+  }
 
-      if (!email || !password) {
-        showNotification('Preencha email e senha.', 'error');
-        return;
-      }
-      
-      try {
-        await auth.signInWithEmailAndPassword(email, password);
-        showNotification('Login realizado com sucesso. Redirecionando...', 'success');
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-      } catch (err) {
-        showNotification('Email ou senha incorretos. Tente novamente.', 'error');
-      }
-    });
+  // ============================================================
+  // MÓDULO: PRODUTOS
+  // ============================================================
 
-    // Criar conta
-    signupBtn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      
-      if (!email || !password) {
-        showNotification('Preencha email e senha para criar conta.', 'error');
-        return;
-      }
-      
-      if (password.length < 6) {
-        showNotification('A senha deve ter pelo menos 6 caracteres.', 'error');
-        return;
-      }
-      
-      try {
-        const userCred = await auth.createUserWithEmailAndPassword(email, password);
-        // Cria documento em /users com role = member
-        await db.collection('users').doc(userCred.user.uid).set({
-          email: email,
-          role: 'member',
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showNotification('Conta criada com sucesso. Redirecionando...', 'success');
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-      } catch (err) {
-        showNotification('Erro ao criar conta: ' + err.message, 'error');
-      }
-    });
+  /**
+   * Salva um novo produto no Firestore.
+   * Coleção: "produtos" → { nome, preco, categoria_id, gera_cashback }
+   */
+  async function salvarProduto() {
+    const nome        = document.getElementById('input-nome-prod').value.trim();
+    const preco       = parseFloat(document.getElementById('input-preco-prod').value);
+    const catId       = document.getElementById('select-cat-prod').value;
+    const geraCashbk  = document.getElementById('check-gera-cashback').checked;
 
-    // Reset de senha
-    resetLink.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const email = emailInput.value.trim();
-      
-      if (!email) {
-        showNotification('Digite seu email para receber o link de recuperação.', 'error');
-        return;
-      }
-      
-      try {
-        await auth.sendPasswordResetEmail(email);
-        showNotification('Email de recuperação enviado. Verifique sua caixa de entrada.', 'success');
-      } catch (err) {
-        showNotification('Erro ao enviar email: ' + err.message, 'error');
-      }
-    });
+    if (!nome)        { mostrarToast('Informe o nome do produto', 'erro'); return; }
+    if (isNaN(preco) || preco <= 0) { mostrarToast('Informe um preço válido', 'erro'); return; }
+    if (!catId)       { mostrarToast('Selecione uma categoria', 'erro'); return; }
 
-    // Se já está logado, redireciona automaticamente
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        window.location.href = 'dashboard.html';
-      }
-    });
+    try {
+      await addDoc(collection(db, 'produtos'), {
+        nome,
+        preco,
+        categoria_id: catId,
+        gera_cashback: geraCashbk
+      });
+      // Limpa os campos do formulário
+      document.getElementById('input-nome-prod').value    = '';
+      document.getElementById('input-preco-prod').value   = '';
+      document.getElementById('select-cat-prod').value    = '';
+      document.getElementById('check-gera-cashback').checked = false;
+      mostrarToast('Produto adicionado! ✅', 'sucesso');
+    } catch (err) {
+      console.error('Erro ao salvar produto:', err);
+      mostrarToast('Erro ao salvar. Verifique a conexão.', 'erro');
+    }
+  }
+  window.salvarProduto = salvarProduto;
 
-    // Permitir login ao pressionar Enter
-    passwordInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        loginBtn.click();
+  /**
+   * Exclui um produto do Firestore.
+   */
+  async function excluirProduto(id) {
+    if (!confirm('Excluir este produto?')) return;
+    try {
+      await deleteDoc(doc(db, 'produtos', id));
+      mostrarToast('Produto removido.', 'sucesso');
+    } catch (err) {
+      mostrarToast('Erro ao excluir.', 'erro');
+    }
+  }
+  window.excluirProduto = excluirProduto;
+
+  /**
+   * Renderiza a lista de produtos no cadastro e
+   * atualiza o cache + grid do PDV.
+   */
+  function renderizarProdutos(docs) {
+    // Atualiza cache para uso no PDV
+    produtosCache = docs;
+
+    // ---- Lista na tela Produtos & Categorias ----
+    const elLista = document.getElementById('lista-produtos-cat');
+    if (docs.length === 0) {
+      elLista.innerHTML = `<div class="lista-vazia">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2ZM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        <p>Nenhum produto cadastrado.</p></div>`;
+    } else {
+      elLista.innerHTML = docs.map(p => {
+        // Busca nome da categoria no cache
+        const cat = categoriasCache.find(c => c.id === p.categoria_id);
+        return `
+          <div class="lista-item">
+            <div class="lista-item-info">
+              <div class="lista-item-nome">${p.nome}</div>
+              <div class="lista-item-sub">${cat ? cat.nome : 'Sem categoria'} ${p.gera_cashback ? '· 💰 Cashback' : ''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="lista-item-preco">${formatarMoeda(p.preco)}</div>
+              <button class="btn-excluir" onclick="excluirProduto('${p.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ---- Atualiza o grid do PDV ----
+    renderizarGridPDV(docs);
+  }
+
+  /**
+   * Emojis padrão por categoria (mapeamento simples).
+   * Se a categoria não for reconhecida, usa 🛍️.
+   */
+  function emojiProduto(nomeCategoria) {
+    const mapa = {
+      'pão': '🥖', 'paes': '🥖', 'pães': '🥖',
+      'doce': '🍰', 'doces': '🍰',
+      'bebida': '🥤', 'bebidas': '🥤',
+      'salgado': '🥪', 'salgados': '🥪',
+      'bolo': '🎂', 'bolos': '🎂',
+      'café': '☕', 'cafe': '☕',
+    };
+    if (!nomeCategoria) return '🛍️';
+    const chave = nomeCategoria.toLowerCase();
+    for (const [k, v] of Object.entries(mapa)) {
+      if (chave.includes(k)) return v;
+    }
+    return '🛍️';
+  }
+
+  /**
+   * Renderiza o grid de produtos clicáveis no PDV.
+   * @param {Array} produtos - lista filtrada de produtos a exibir.
+   */
+  function renderizarGridPDV(produtos) {
+    const grid = document.getElementById('grid-produtos');
+
+    if (!produtos || produtos.length === 0) {
+      grid.innerHTML = `<div class="lista-vazia" style="grid-column:1/-1;">
+        <p>Nenhum produto encontrado.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = produtos.map(p => {
+      const cat   = categoriasCache.find(c => c.id === p.categoria_id);
+      const emoji = emojiProduto(cat ? cat.nome : '');
+      return `
+        <div class="produto-card" onclick="adicionarAoCarrinho('${p.id}')">
+          <div class="produto-card-emoji">${emoji}</div>
+          <div class="produto-card-nome">${p.nome}</div>
+          <div class="produto-card-preco">${formatarMoeda(p.preco)}</div>
+          ${p.gera_cashback ? '<div class="produto-card-badge">💰 Cashback</div>' : ''}
+        </div>`;
+    }).join('');
+  }
+
+  /**
+   * Filtra o grid do PDV conforme o texto digitado na busca.
+   */
+  function filtrarProdutos() {
+    const termo = document.getElementById('busca-produto').value.toLowerCase().trim();
+    const filtrados = termo
+      ? produtosCache.filter(p => p.nome.toLowerCase().includes(termo))
+      : produtosCache;
+    renderizarGridPDV(filtrados);
+  }
+  window.filtrarProdutos = filtrarProdutos;
+
+  // ============================================================
+  // MÓDULO: CARRINHO DE COMPRAS
+  // ============================================================
+
+  /**
+   * Adiciona um produto ao carrinho ou incrementa sua quantidade.
+   * @param {string} produtoId - ID do produto clicado no grid.
+   */
+  function adicionarAoCarrinho(produtoId) {
+    const produto = produtosCache.find(p => p.id === produtoId);
+    if (!produto) return;
+
+    // Verifica se o produto já está no carrinho
+    const existente = carrinho.find(item => item.produto_id === produtoId);
+    if (existente) {
+      existente.qtd++;
+    } else {
+      carrinho.push({
+        produto_id:    produtoId,
+        nome:          produto.nome,
+        preco_unitario: produto.preco,
+        gera_cashback: produto.gera_cashback,
+        qtd:           1
+      });
+    }
+
+    // Feedback visual de "flash" no card do produto (opcional)
+    mostrarToast(`${produto.nome} adicionado`);
+    atualizarCarrinho();
+  }
+  window.adicionarAoCarrinho = adicionarAoCarrinho;
+
+  /**
+   * Incrementa a quantidade de um item do carrinho.
+   */
+  function incrementarItem(produtoId) {
+    const item = carrinho.find(i => i.produto_id === produtoId);
+    if (item) { item.qtd++; atualizarCarrinho(); }
+  }
+  window.incrementarItem = incrementarItem;
+
+  /**
+   * Decrementa a quantidade ou remove o item se chegar a zero.
+   */
+  function decrementarItem(produtoId) {
+    const idx  = carrinho.findIndex(i => i.produto_id === produtoId);
+    if (idx === -1) return;
+    carrinho[idx].qtd--;
+    if (carrinho[idx].qtd <= 0) carrinho.splice(idx, 1);
+    atualizarCarrinho();
+  }
+  window.decrementarItem = decrementarItem;
+
+  /**
+   * Re-renderiza o carrinho e atualiza o resumo de valores.
+   * Chamado sempre que o carrinho muda.
+   */
+  function atualizarCarrinho() {
+    const lista         = document.getElementById('lista-carrinho');
+    const tituloCarr    = document.getElementById('titulo-carrinho');
+    const resumoDiv     = document.getElementById('resumo-venda');
+    const badge         = document.getElementById('badge-carrinho');
+
+    // Atualiza badge de quantidade na nav
+    const totalItens = carrinho.reduce((s, i) => s + i.qtd, 0);
+    badge.textContent = totalItens;
+    badge.classList.toggle('visivel', totalItens > 0);
+
+    if (carrinho.length === 0) {
+      lista.innerHTML = '';
+      tituloCarr.style.display  = 'none';
+      resumoDiv.style.display   = 'none';
+      return;
+    }
+
+    // Exibe o título e o resumo
+    tituloCarr.style.display = 'block';
+    resumoDiv.style.display  = 'block';
+
+    // Renderiza cada item do carrinho
+    lista.innerHTML = carrinho.map(item => `
+      <div class="carrinho-item">
+        <div class="carrinho-item-nome">${item.nome}</div>
+        <div class="qtd-controle">
+          <button class="qtd-btn" onclick="decrementarItem('${item.produto_id}')">−</button>
+          <span class="qtd-valor">${item.qtd}</span>
+          <button class="qtd-btn" onclick="incrementarItem('${item.produto_id}')">+</button>
+        </div>
+        <div class="carrinho-item-preco">${formatarMoeda(item.preco_unitario * item.qtd)}</div>
+      </div>`).join('');
+
+    // Calcula valores do resumo
+    calcularResumo();
+  }
+
+  /**
+   * Calcula e exibe o resumo financeiro da venda:
+   * subtotal, desconto cashback, total e cashback que será gerado.
+   */
+  function calcularResumo() {
+    const subtotal = carrinho.reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
+
+    // Calcula cashback a gerar apenas sobre itens com flag true
+    const baseParaCashback = carrinho
+      .filter(i => i.gera_cashback)
+      .reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
+    const cashbackGerado = baseParaCashback * PERCENTUAL_CASHBACK;
+
+    // Verifica se o operador optou por usar o saldo do cliente
+    const usarCash  = document.getElementById('usar-cashback').checked;
+    const saldoDisp = clienteAtual ? (clienteAtual.saldo_cashback || 0) : 0;
+    // Desconto não pode ultrapassar o subtotal
+    const desconto  = usarCash ? Math.min(saldoDisp, subtotal) : 0;
+    const total     = subtotal - desconto;
+
+    // Atualiza os elementos de exibição
+    document.getElementById('res-subtotal').textContent       = formatarMoeda(subtotal);
+    document.getElementById('res-total').textContent          = formatarMoeda(total);
+    document.getElementById('res-cashback-gerado').textContent = formatarMoeda(cashbackGerado);
+
+    // Exibe/oculta linha de desconto
+    const linhaDesc = document.getElementById('res-linha-cashback');
+    if (usarCash && desconto > 0) {
+      linhaDesc.style.display = 'flex';
+      document.getElementById('res-desconto').textContent = '- ' + formatarMoeda(desconto);
+    } else {
+      linhaDesc.style.display = 'none';
+    }
+  }
+
+  // Recalcula o resumo quando o toggle de cashback muda
+  document.getElementById('usar-cashback').addEventListener('change', calcularResumo);
+
+  // ============================================================
+  // MÓDULO: CLIENTES
+  // ============================================================
+
+  /**
+   * Salva um novo cliente no Firestore.
+   * Coleção: "clientes" → { nome, telefone, saldo_cashback: 0 }
+   */
+  async function salvarCliente() {
+    const nome = document.getElementById('input-nome-cliente').value.trim();
+    const tel  = document.getElementById('input-tel-novo-cliente').value.trim();
+
+    if (!nome) { mostrarToast('Informe o nome do cliente', 'erro'); return; }
+    if (!tel)  { mostrarToast('Informe o telefone', 'erro'); return; }
+
+    // Verifica se telefone já existe
+    const q = query(collection(db, 'clientes'), where('telefone', '==', tel));
+    const snap = await getDocs(q);
+    if (!snap.empty) { mostrarToast('Telefone já cadastrado!', 'erro'); return; }
+
+    try {
+      await addDoc(collection(db, 'clientes'), {
+        nome,
+        telefone: tel,
+        saldo_cashback: 0
+      });
+      document.getElementById('input-nome-cliente').value = '';
+      document.getElementById('input-tel-novo-cliente').value = '';
+      mostrarToast(`${nome} cadastrado! ✅`, 'sucesso');
+    } catch (err) {
+      console.error('Erro ao salvar cliente:', err);
+      mostrarToast('Erro ao salvar.', 'erro');
+    }
+  }
+  window.salvarCliente = salvarCliente;
+
+  /**
+   * Busca um cliente pelo telefone no PDV e preenche o painel de cliente.
+   */
+  async function buscarClientePorTelefone() {
+    const tel = document.getElementById('input-tel-cliente').value.trim();
+    if (!tel) { mostrarToast('Informe o telefone', 'erro'); return; }
+
+    const q    = query(collection(db, 'clientes'), where('telefone', '==', tel));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      mostrarToast('Cliente não encontrado. Cadastre-o na aba Clientes.', 'erro');
+      clienteAtual = null;
+      document.getElementById('info-cliente').style.display = 'none';
+      calcularResumo();
+      return;
+    }
+
+    // Pega o primeiro resultado
+    const docCliente = snap.docs[0];
+    clienteAtual = { id: docCliente.id, ...docCliente.data() };
+
+    // Preenche o painel de exibição
+    document.getElementById('cliente-nome-exibido').textContent   = clienteAtual.nome;
+    document.getElementById('cliente-saldo-exibido').textContent  = formatarMoeda(clienteAtual.saldo_cashback || 0);
+    document.getElementById('info-cliente').style.display         = 'block';
+    document.getElementById('usar-cashback').checked              = false;
+
+    mostrarToast(`Olá, ${clienteAtual.nome}! 👋`, 'sucesso');
+    calcularResumo();
+  }
+  window.buscarClientePorTelefone = buscarClientePorTelefone;
+
+  /**
+   * Consulta o painel de saldo + histórico de um cliente (tela Clientes).
+   */
+  async function consultarCliente() {
+    const tel    = document.getElementById('input-tel-consulta').value.trim();
+    const painel = document.getElementById('painel-consulta-cliente');
+
+    if (!tel) { mostrarToast('Informe o telefone', 'erro'); return; }
+
+    const q    = query(collection(db, 'clientes'), where('telefone', '==', tel));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      painel.style.display = 'block';
+      painel.innerHTML = '<p style="color:var(--cor-texto-suave);font-size:0.9rem;">Cliente não encontrado.</p>';
+      return;
+    }
+
+    const docCliente = snap.docs[0];
+    const cliente    = { id: docCliente.id, ...docCliente.data() };
+
+    // Busca histórico de vendas do cliente (últimas 10)
+    const qVendas  = query(
+      collection(db, 'vendas'),
+      where('cliente_id', '==', cliente.id),
+      orderBy('data_hora', 'desc')
+    );
+    const snapVendas = await getDocs(qVendas);
+
+    // Monta o HTML do histórico
+    let historicoHTML = '<div class="divisor"></div><div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;">Histórico de Compras</div>';
+    if (snapVendas.empty) {
+      historicoHTML += '<p style="color:var(--cor-texto-suave);font-size:0.85rem;">Nenhuma compra registrada ainda.</p>';
+    } else {
+      historicoHTML += snapVendas.docs.slice(0, 10).map(v => {
+        const venda = v.data();
+        return `
+          <div class="historico-item">
+            <div class="historico-data">${formatarData(venda.data_hora)}</div>
+            <div class="historico-valores">
+              <span>Pago: <strong>${formatarMoeda(venda.total_pago || 0)}</strong></span>
+              <span style="color:var(--cor-secundaria);">+${formatarMoeda(venda.cashback_gerado || 0)} CB</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    painel.style.display = 'block';
+    painel.innerHTML = `
+      <div class="cliente-info-card" style="margin-bottom:10px;">
+        <div>
+          <div class="cliente-info-nome">${cliente.nome}</div>
+          <div style="font-size:0.75rem;color:var(--cor-texto-suave);">${cliente.telefone}</div>
+        </div>
+        <div>
+          <div class="cliente-info-saldo">${formatarMoeda(cliente.saldo_cashback || 0)}</div>
+          <div style="font-size:0.68rem;color:var(--cor-texto-suave);text-align:right;">saldo cashback</div>
+        </div>
+      </div>
+      ${historicoHTML}`;
+  }
+  window.consultarCliente = consultarCliente;
+
+  /**
+   * Renderiza a lista de todos os clientes na tela Clientes.
+   */
+  function renderizarClientes(docs) {
+    const el = document.getElementById('lista-clientes');
+
+    if (docs.length === 0) {
+      el.innerHTML = `<div class="lista-vazia">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
+        <p>Nenhum cliente cadastrado.</p></div>`;
+      return;
+    }
+
+    el.innerHTML = docs.map(c => `
+      <div class="cliente-card">
+        <div class="cliente-avatar">${iniciais(c.nome)}</div>
+        <div class="cliente-card-info">
+          <div class="cliente-card-nome">${c.nome}</div>
+          <div class="cliente-card-tel">📱 ${c.telefone}</div>
+        </div>
+        <div class="cliente-card-saldo">
+          <div class="cliente-saldo-valor">${formatarMoeda(c.saldo_cashback || 0)}</div>
+          <div class="cliente-saldo-label">cashback</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ============================================================
+  // MÓDULO: FINALIZAR VENDA
+  // Usa runTransaction para garantir consistência no Firestore:
+  // - Lê o saldo atual do cliente em tempo real
+  // - Subtrai o saldo usado e soma o cashback gerado
+  // - Salva o documento de venda
+  // Tudo isso de forma atômica (tudo junto ou nada).
+  // ============================================================
+
+  async function finalizarVenda() {
+    if (carrinho.length === 0) {
+      mostrarToast('Carrinho vazio!', 'erro');
+      return;
+    }
+
+    const btn = document.getElementById('btn-finalizar');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Finalizando...';
+
+    try {
+      // Calcula os valores da venda
+      const subtotal = carrinho.reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
+      const baseParaCashback = carrinho
+        .filter(i => i.gera_cashback)
+        .reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
+      const cashbackGerado = parseFloat((baseParaCashback * PERCENTUAL_CASHBACK).toFixed(2));
+
+      const usarCash = document.getElementById('usar-cashback').checked && clienteAtual !== null;
+
+      // Executa a transação atômica no Firestore
+      await runTransaction(db, async (transaction) => {
+        let cashbackUsado    = 0;
+        let novoSaldo        = null;
+        let clienteDocRef    = null;
+        let saldoAtualBanco  = 0;
+
+        // Se há cliente identificado, lemos seu saldo DENTRO da transação
+        // (garante que o saldo não mudou entre a leitura anterior e agora)
+        if (clienteAtual) {
+          clienteDocRef   = doc(db, 'clientes', clienteAtual.id);
+          const clienteSnap = await transaction.get(clienteDocRef);
+          saldoAtualBanco   = clienteSnap.data().saldo_cashback || 0;
+
+          if (usarCash) {
+            cashbackUsado = Math.min(saldoAtualBanco, subtotal);
+          }
+
+          // Novo saldo = saldo atual - cashback usado + cashback gerado nesta venda
+          novoSaldo = parseFloat((saldoAtualBanco - cashbackUsado + cashbackGerado).toFixed(2));
+        }
+
+        const totalPago = parseFloat((subtotal - (usarCash ? cashbackUsado : 0)).toFixed(2));
+
+        // Monta o objeto da venda conforme o modelo de dados
+        const vendaData = {
+          data_hora:       serverTimestamp(),
+          cliente_id:      clienteAtual ? clienteAtual.id : null,
+          itens:           carrinho.map(i => ({
+            produto_id:    i.produto_id,
+            qtd:           i.qtd,
+            preco_unitario: i.preco_unitario
+          })),
+          total_bruto:     parseFloat(subtotal.toFixed(2)),
+          cashback_usado:  usarCash ? parseFloat(cashbackUsado.toFixed(2)) : 0,
+          total_pago:      totalPago,
+          cashback_gerado: cashbackGerado
+        };
+
+        // Cria o documento de venda na coleção "vendas"
+        const vendaRef = doc(collection(db, 'vendas'));
+        transaction.set(vendaRef, vendaData);
+
+        // Atualiza o saldo do cliente (se identificado)
+        if (clienteDocRef && novoSaldo !== null) {
+          transaction.update(clienteDocRef, { saldo_cashback: novoSaldo });
+        }
+      });
+
+      // Sucesso! Limpa o estado da venda
+      mostrarToast('✅ Venda finalizada com sucesso!', 'sucesso');
+      carrinho = [];
+      clienteAtual = null;
+      document.getElementById('input-tel-cliente').value  = '';
+      document.getElementById('info-cliente').style.display = 'none';
+      document.getElementById('usar-cashback').checked    = false;
+      atualizarCarrinho();
+
+    } catch (err) {
+      console.error('Erro ao finalizar venda:', err);
+      mostrarToast('Erro ao finalizar venda. Tente novamente.', 'erro');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '✅ Finalizar Venda';
+    }
+  }
+  window.finalizarVenda = finalizarVenda;
+
+  // ============================================================
+  // LISTENERS EM TEMPO REAL (onSnapshot)
+  // Mantém as listas atualizadas automaticamente sem recarregar.
+  // ============================================================
+
+  /**
+   * Listener de Categorias:
+   * Atualiza a lista e o select de produtos toda vez que há mudança.
+   */
+  onSnapshot(collection(db, 'categorias'), (snapshot) => {
+    categoriasCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Renderiza lista de categorias
+    renderizarCategorias(categoriasCache);
+
+    // Atualiza o select de categoria no formulário de produtos
+    const sel = document.getElementById('select-cat-prod');
+    sel.innerHTML = '<option value="">Selecione uma categoria...</option>' +
+      categoriasCache.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+    // Re-renderiza os produtos para refletir os nomes das categorias
+    renderizarProdutos(produtosCache);
+  });
+
+  /**
+   * Listener de Produtos:
+   * Atualiza o grid do PDV e a lista de cadastro automaticamente.
+   */
+  onSnapshot(collection(db, 'produtos'), (snapshot) => {
+    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderizarProdutos(docs);
+  });
+
+  /**
+   * Listener de Clientes:
+   * Atualiza a lista de clientes automaticamente.
+   */
+  onSnapshot(collection(db, 'clientes'), (snapshot) => {
+    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderizarClientes(docs);
+  });
+
+  // ============================================================
+  // UTILITÁRIO: MÁSCARA DE TELEFONE
+  // Formata automaticamente o input de telefone enquanto o usuário digita.
+  // ============================================================
+  function aplicarMascaraTelefone(input) {
+    input.addEventListener('input', () => {
+      let v = input.value.replace(/\D/g, '');
+      if (v.length <= 10) {
+        v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      } else {
+        v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
       }
+      input.value = v;
     });
-  </script>
+  }
+
+  // Aplica máscara em todos os campos de telefone
+  ['input-tel-cliente', 'input-tel-novo-cliente', 'input-tel-consulta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) aplicarMascaraTelefone(el);
+  });
+
+</script>
 </body>
 </html>
