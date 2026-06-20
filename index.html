@@ -1,2084 +1,661 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <!-- Viewport configurado para mobile-first: escala 1:1 em celulares -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>PãoFácil PDV</title>
-
-  <!-- Google Fonts: Sora (display/títulos) + DM Sans (corpo de texto) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-
-  <style>
-    /* ============================================================
-       DESIGN TOKENS (VARIÁVEIS CSS GLOBAIS)
-       Altere aqui para mudar toda a paleta do sistema de uma vez.
-       ============================================================ */
-    :root {
-      --cor-fundo:        #F5F0E8;      /* Bege quente – remete a farinha */
-      --cor-fundo-card:   #FFFFFF;
-      --cor-primaria:     #C8410A;      /* Laranja-tijolo – cor da padaria */
-      --cor-primaria-esc: #A33308;      /* Tom mais escuro para hover */
-      --cor-secundaria:   #2D6A4F;      /* Verde para cashback/dinheiro */
-      --cor-secundaria-cl:#D8F3DC;      /* Verde clarinho para badges */
-      --cor-texto:        #1A1A1A;
-      --cor-texto-suave:  #6B6B6B;
-      --cor-borda:        #E0D8CC;
-      --cor-danger:       #D62828;
-      --cor-nav:          #FFFFFF;
-      --altura-nav:       68px;         /* Altura da barra de navegação inferior */
-      --raio:             14px;
-      --sombra:           0 2px 16px rgba(0,0,0,0.08);
-      --sombra-forte:     0 4px 24px rgba(0,0,0,0.14);
-      --transicao:        0.22s ease;
-    }
-
-    /* ============================================================
-       RESET E BASE
-       ============================================================ */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cor-fundo);
-      color: var(--cor-texto);
-      -webkit-tap-highlight-color: transparent; /* Remove flash azul no toque mobile */
-      overscroll-behavior: none;
-    }
-
-    /* Botão base sem estilo padrão */
-    button {
-      font-family: inherit;
-      cursor: pointer;
-      border: none;
-      background: none;
-    }
-
-    input, select, textarea {
-      font-family: inherit;
-    }
-
-    /* ============================================================
-       LAYOUT PRINCIPAL – SPA (Single Page Application)
-       O conteúdo fica acima da barra de nav inferior.
-       ============================================================ */
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100dvh;          /* dvh = dynamic viewport height (melhor em mobile) */
-      overflow: hidden;
-    }
-
-    /* Área de conteúdo rolável */
-    #conteudo {
-      flex: 1;
-      overflow-y: auto;
-      padding-bottom: calc(var(--altura-nav) + 8px);
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* ============================================================
-       CABEÇALHO DAS TELAS
-       ============================================================ */
-    .tela-header {
-      background: var(--cor-primaria);
-      color: #fff;
-      padding: 20px 16px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .tela-header h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: 1.3rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
-    .tela-header p {
-      font-size: 0.8rem;
-      opacity: 0.82;
-      margin-top: 2px;
-    }
-
-    /* ============================================================
-       BARRA DE NAVEGAÇÃO INFERIOR (BOTTOM NAV)
-       Fixa na parte inferior, estilo app nativo.
-       ============================================================ */
-    #bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--altura-nav);
-      background: var(--cor-nav);
-      border-top: 1px solid var(--cor-borda);
-      display: flex;
-      align-items: stretch;
-      z-index: 100;
-      box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
-    }
-
-    /* Cada botão de aba na nav */
-    .nav-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding: 6px 4px;
-      color: var(--cor-texto-suave);
-      transition: color var(--transicao), background var(--transicao);
-      border-radius: 0;
-      position: relative;
-    }
-
-    .nav-btn:active {
-      background: var(--cor-fundo);
-    }
-
-    /* Ícone SVG dentro do botão de nav */
-    .nav-btn svg {
-      width: 24px;
-      height: 24px;
-      stroke-width: 1.8;
-      transition: stroke var(--transicao), transform var(--transicao);
-    }
-
-    /* Texto da aba */
-    .nav-btn span {
-      font-size: 0.67rem;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-    }
-
-    /* Estado ATIVO da aba */
-    .nav-btn.ativo {
-      color: var(--cor-primaria);
-    }
-
-    .nav-btn.ativo svg {
-      transform: translateY(-2px);
-    }
-
-    /* Linha indicadora no topo do botão ativo */
-    .nav-btn.ativo::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 20%;
-      right: 20%;
-      height: 3px;
-      background: var(--cor-primaria);
-      border-radius: 0 0 4px 4px;
-    }
-
-    /* Badge de contador no carrinho */
-    .nav-badge {
-      position: absolute;
-      top: 6px;
-      right: calc(50% - 18px);
-      background: var(--cor-primaria);
-      color: #fff;
-      font-size: 0.6rem;
-      font-weight: 700;
-      min-width: 16px;
-      height: 16px;
-      border-radius: 99px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-      opacity: 0;
-      transform: scale(0);
-      transition: opacity var(--transicao), transform var(--transicao);
-    }
-
-    .nav-badge.visivel {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    /* ============================================================
-       TELAS – mostradas/escondidas pela lógica de SPA
-       ============================================================ */
-    .tela {
-      display: none;
-      animation: fadeIn 0.18s ease;
-    }
-
-    .tela.ativa {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ============================================================
-       COMPONENTES REUTILIZÁVEIS
-       ============================================================ */
-
-    /* Card branco com sombra */
-    .card {
-      background: var(--cor-fundo-card);
-      border-radius: var(--raio);
-      box-shadow: var(--sombra);
-      padding: 16px;
-      margin: 12px 12px 0;
-    }
-
-    /* Botão primário (laranja) */
-    .btn-primario {
-      background: var(--cor-primaria);
-      color: #fff;
-      border-radius: 12px;
-      padding: 14px 20px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      font-family: 'Sora', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      transition: background var(--transicao), transform var(--transicao), box-shadow var(--transicao);
-      box-shadow: 0 4px 12px rgba(200,65,10,0.3);
-    }
-
-    .btn-primario:active {
-      background: var(--cor-primaria-esc);
-      transform: scale(0.98);
-      box-shadow: 0 2px 6px rgba(200,65,10,0.2);
-    }
-
-    .btn-primario:disabled {
-      background: #ccc;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    /* Botão secundário (verde) */
-    .btn-verde {
-      background: var(--cor-secundaria);
-      color: #fff;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: background var(--transicao), transform var(--transicao);
-    }
-
-    .btn-verde:active {
-      background: #1B4332;
-      transform: scale(0.98);
-    }
-
-    /* Botão outline (borda) */
-    .btn-outline {
-      border: 2px solid var(--cor-primaria);
-      color: var(--cor-primaria);
-      border-radius: 12px;
-      padding: 11px 16px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: background var(--transicao), color var(--transicao);
-    }
-
-    .btn-outline:active {
-      background: var(--cor-primaria);
-      color: #fff;
-    }
-
-    /* Campo de input padrão */
-    .campo {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-
-    .campo label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--cor-texto-suave);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .campo input,
-    .campo select {
-      background: var(--cor-fundo);
-      border: 1.5px solid var(--cor-borda);
-      border-radius: 10px;
-      padding: 13px 14px;
-      font-size: 0.95rem;
-      color: var(--cor-texto);
-      transition: border-color var(--transicao);
-      outline: none;
-      width: 100%;
-    }
-
-    .campo input:focus,
-    .campo select:focus {
-      border-color: var(--cor-primaria);
-    }
-
-    /* Checkbox com estilo customizado */
-    .campo-check {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      background: var(--cor-fundo);
-      border: 1.5px solid var(--cor-borda);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: border-color var(--transicao), background var(--transicao);
-    }
-
-    .campo-check:has(input:checked) {
-      border-color: var(--cor-secundaria);
-      background: var(--cor-secundaria-cl);
-    }
-
-    .campo-check input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--cor-secundaria);
-      cursor: pointer;
-    }
-
-    .campo-check span {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    /* Título de seção */
-    .secao-titulo {
-      font-family: 'Sora', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--cor-texto-suave);
-      padding: 16px 14px 6px;
-    }
-
-    /* Badge de status */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
-      border-radius: 99px;
-      font-size: 0.72rem;
-      font-weight: 700;
-    }
-
-    .badge-verde {
-      background: var(--cor-secundaria-cl);
-      color: var(--cor-secundaria);
-    }
-
-    .badge-cinza {
-      background: #EBEBEB;
-      color: #666;
-    }
-
-    /* Divisor */
-    .divisor {
-      height: 1px;
-      background: var(--cor-borda);
-      margin: 12px 0;
-    }
-
-    /* Mensagem de lista vazia */
-    .lista-vazia {
-      text-align: center;
-      padding: 32px 16px;
-      color: var(--cor-texto-suave);
-    }
-
-    .lista-vazia svg {
-      opacity: 0.3;
-      margin-bottom: 12px;
-    }
-
-    .lista-vazia p {
-      font-size: 0.9rem;
-    }
-
-    /* Toast de notificação */
-    #toast {
-      position: fixed;
-      bottom: calc(var(--altura-nav) + 16px);
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #1A1A1A;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 99px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      transition: opacity 0.25s, transform 0.25s;
-      z-index: 999;
-      pointer-events: none;
-      max-width: 90vw;
-      text-align: center;
-      white-space: normal;
-    }
-
-    #toast.visivel {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    #toast.toast-sucesso { background: var(--cor-secundaria); }
-    #toast.toast-erro    { background: var(--cor-danger); }
-
-    /* Modal/Overlay */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 200;
-      display: flex;
-      align-items: flex-end;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity var(--transicao);
-    }
-
-    .modal-overlay.aberto {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .modal-box {
-      background: var(--cor-fundo-card);
-      border-radius: var(--raio) var(--raio) 0 0;
-      padding: 20px 16px;
-      width: 100%;
-      max-height: 90dvh;
-      overflow-y: auto;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
-    }
-
-    .modal-overlay.aberto .modal-box {
-      transform: translateY(0);
-    }
-
-    .modal-titulo {
-      font-family: 'Sora', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-
-    /* ============================================================
-       TELA 1 – PDV (FRENTE DE CAIXA)
-       ============================================================ */
-
-    /* Campo de busca de produto */
-    .pdv-busca {
-      padding: 12px 12px 0;
-    }
-
-    .pdv-busca input {
-      width: 100%;
-      padding: 12px 16px 12px 42px;
-      border: 1.5px solid var(--cor-borda);
-      border-radius: 12px;
-      font-size: 0.95rem;
-      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236B6B6B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 14px center;
-      outline: none;
-      transition: border-color var(--transicao);
-    }
-
-    .pdv-busca input:focus {
-      border-color: var(--cor-primaria);
-    }
-
-    /* Grid de produtos – 2 colunas em mobile */
-    #grid-produtos {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      padding: 10px 12px;
-    }
-
-    /* Card de produto no grid */
-    .produto-card {
-      background: var(--cor-fundo-card);
-      border: 1.5px solid var(--cor-borda);
-      border-radius: var(--raio);
-      padding: 14px 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color var(--transicao), transform var(--transicao), box-shadow var(--transicao);
-      box-shadow: var(--sombra);
-      user-select: none;
-    }
-
-    .produto-card:active {
-      transform: scale(0.96);
-      border-color: var(--cor-primaria);
-      box-shadow: var(--sombra-forte);
-    }
-
-    .produto-card-emoji {
-      font-size: 2rem;
-      line-height: 1;
-    }
-
-    .produto-card-nome {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--cor-texto);
-      line-height: 1.2;
-    }
-
-    .produto-card-preco {
-      font-family: 'Sora', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--cor-primaria);
-    }
-
-    .produto-card-badge {
-      font-size: 0.62rem;
-      background: var(--cor-secundaria-cl);
-      color: var(--cor-secundaria);
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-weight: 700;
-    }
-
-    /* ---- PAINEL DE CLIENTE ---- */
-    .painel-cliente {
-      background: var(--cor-fundo-card);
-      border-radius: var(--raio);
-      margin: 0 12px;
-      padding: 14px;
-      box-shadow: var(--sombra);
-    }
-
-    .painel-cliente-titulo {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--cor-texto-suave);
-      margin-bottom: 10px;
-    }
-
-    .cliente-busca-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .cliente-busca-row input {
-      flex: 1;
-      padding: 11px 14px;
-      border: 1.5px solid var(--cor-borda);
-      border-radius: 10px;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color var(--transicao);
-    }
-
-    .cliente-busca-row input:focus {
-      border-color: var(--cor-primaria);
-    }
-
-    .cliente-busca-row button {
-      background: var(--cor-primaria);
-      color: #fff;
-      border-radius: 10px;
-      padding: 0 16px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: background var(--transicao);
-    }
-
-    .cliente-busca-row button:active {
-      background: var(--cor-primaria-esc);
-    }
-
-    /* Info do cliente encontrado */
-    #info-cliente {
-      margin-top: 12px;
-      display: none;
-    }
-
-    .cliente-info-card {
-      background: var(--cor-fundo);
-      border-radius: 10px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .cliente-info-nome {
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .cliente-info-saldo {
-      font-family: 'Sora', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--cor-secundaria);
-    }
-
-    .cliente-info-saldo span {
-      font-size: 0.7rem;
-      font-weight: 500;
-    }
-
-    /* Toggle de usar cashback */
-    .cashback-toggle {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-      padding: 10px 12px;
-      background: var(--cor-secundaria-cl);
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .cashback-toggle input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--cor-secundaria);
-      cursor: pointer;
-    }
-
-    .cashback-toggle label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--cor-secundaria);
-      cursor: pointer;
-    }
-
-    /* ---- CARRINHO ---- */
-    #lista-carrinho {
-      padding: 0 12px;
-    }
-
-    .carrinho-item {
-      background: var(--cor-fundo-card);
-      border-radius: var(--raio);
-      padding: 12px 14px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: var(--sombra);
-    }
-
-    .carrinho-item-nome {
-      flex: 1;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .carrinho-item-preco {
-      font-family: 'Sora', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--cor-primaria);
-      min-width: 60px;
-      text-align: right;
-    }
-
-    /* Controles de quantidade (+/-) */
-    .qtd-controle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .qtd-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      background: var(--cor-fundo);
-      border: 1.5px solid var(--cor-borda);
-      font-size: 1.1rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--cor-texto);
-      transition: background var(--transicao);
-      flex-shrink: 0;
-    }
-
-    .qtd-btn:active {
-      background: var(--cor-borda);
-    }
-
-    .qtd-valor {
-      font-family: 'Sora', sans-serif;
-      font-weight: 700;
-      font-size: 1rem;
-      min-width: 20px;
-      text-align: center;
-    }
-
-    /* ---- RESUMO DE FECHAMENTO ---- */
-    .resumo-venda {
-      background: var(--cor-fundo-card);
-      border-radius: var(--raio) var(--raio) 0 0;
-      padding: 16px 16px 8px;
-      margin: 0 12px;
-      box-shadow: var(--sombra-forte);
-    }
-
-    .resumo-linha {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 0;
-      font-size: 0.9rem;
-    }
-
-    .resumo-linha.destaque {
-      border-top: 2px solid var(--cor-borda);
-      margin-top: 6px;
-      padding-top: 10px;
-    }
-
-    .resumo-linha.destaque .resumo-valor {
-      font-family: 'Sora', sans-serif;
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--cor-primaria);
-    }
-
-    .resumo-linha.cashback-linha .resumo-valor {
-      color: var(--cor-secundaria);
-      font-weight: 700;
-    }
-
-    .resumo-label {
-      color: var(--cor-texto-suave);
-    }
-
-    .resumo-valor {
-      font-weight: 600;
-    }
-
-    /* Botão de finalizar venda */
-    .btn-finalizar {
-      margin: 10px 12px 0;
-    }
-
-    /* ============================================================
-       TELA 2 – PRODUTOS & CATEGORIAS
-       ============================================================ */
-
-    /* Abas internas (Categorias / Produtos) */
-    .abas-internas {
-      display: flex;
-      gap: 0;
-      padding: 12px 12px 0;
-    }
-
-    .aba-interna-btn {
-      flex: 1;
-      padding: 11px 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--cor-texto-suave);
-      border-bottom: 2px solid var(--cor-borda);
-      transition: color var(--transicao), border-color var(--transicao);
-      text-align: center;
-    }
-
-    .aba-interna-btn.ativa {
-      color: var(--cor-primaria);
-      border-bottom-color: var(--cor-primaria);
-    }
-
-    .aba-interna-conteudo {
-      display: none;
-    }
-
-    .aba-interna-conteudo.ativa {
-      display: block;
-    }
-
-    /* Item de lista (produto ou categoria) */
-    .lista-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 12px;
-      border-bottom: 1px solid var(--cor-borda);
-      gap: 10px;
-    }
-
-    .lista-item:last-child {
-      border-bottom: none;
-    }
-
-    .lista-item-info {
-      flex: 1;
-    }
-
-    .lista-item-nome {
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .lista-item-sub {
-      font-size: 0.75rem;
-      color: var(--cor-texto-suave);
-      margin-top: 2px;
-    }
-
-    .lista-item-preco {
-      font-family: 'Sora', sans-serif;
-      font-weight: 700;
-      color: var(--cor-primaria);
-      font-size: 0.95rem;
-    }
-
-    .btn-excluir {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: #FFECEC;
-      color: var(--cor-danger);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: background var(--transicao);
-    }
-
-    .btn-excluir:active {
-      background: #FFC5C5;
-    }
-
-    /* ============================================================
-       TELA 3 – CLIENTES & CASHBACK
-       ============================================================ */
-
-    .cliente-card {
-      background: var(--cor-fundo-card);
-      border-radius: var(--raio);
-      padding: 16px;
-      margin: 0 12px 10px;
-      box-shadow: var(--sombra);
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .cliente-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: var(--cor-primaria);
-      color: #fff;
-      font-family: 'Sora', sans-serif;
-      font-weight: 700;
-      font-size: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .cliente-card-info {
-      flex: 1;
-    }
-
-    .cliente-card-nome {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .cliente-card-tel {
-      font-size: 0.78rem;
-      color: var(--cor-texto-suave);
-      margin-top: 2px;
-    }
-
-    .cliente-card-saldo {
-      text-align: right;
-    }
-
-    .cliente-saldo-valor {
-      font-family: 'Sora', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--cor-secundaria);
-    }
-
-    .cliente-saldo-label {
-      font-size: 0.7rem;
-      color: var(--cor-texto-suave);
-    }
-
-    /* Histórico de vendas do cliente */
-    .historico-item {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--cor-borda);
-    }
-
-    .historico-item:last-child {
-      border-bottom: none;
-    }
-
-    .historico-data {
-      font-size: 0.75rem;
-      color: var(--cor-texto-suave);
-    }
-
-    .historico-valores {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 4px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    /* ============================================================
-       SPINNER / LOADER
-       ============================================================ */
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* ============================================================
-       RESPONSIVIDADE – telas maiores (tablet/desktop)
-       ============================================================ */
-    @media (min-width: 480px) {
-      #grid-produtos {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (min-width: 700px) {
-      #app {
-        max-width: 480px;
-        margin: 0 auto;
-        box-shadow: var(--sombra-forte);
-      }
-
-      #bottom-nav {
-        max-width: 480px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-
-      #toast {
-        max-width: 420px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LanLan · Painel da Diretoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#F4581E;--brand-2:#E0390C;--gold:#F6A91B;--green:#1FA85B;--blue:#3D7FD6;--red:#E2453A;
+  --bg:#F1EAE1;--bg-2:#E9DFD2;--card:#FFFFFF;--ink:#211C18;--ink-2:#6F655C;--line:#EAE0D4;
+  --shadow:0 .6vmin 2.2vmin rgba(120,70,30,.10);--shadow-lg:0 1.2vmin 4vmin rgba(120,60,20,.16);
+}
+[data-theme="dark"]{
+  --bg:#16110D;--bg-2:#1E1712;--card:#241C16;--ink:#FBF4EC;--ink-2:#A99B8C;--line:#33271E;
+  --shadow:0 .6vmin 2.2vmin rgba(0,0,0,.45);--shadow-lg:0 1.2vmin 4vmin rgba(0,0,0,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3,.display{font-family:'Outfit',sans-serif}
+
+#app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#rot{position:fixed;top:0;left:0;height:.45vmin;background:var(--gold);width:0;z-index:60;box-shadow:0 0 1.4vmin var(--gold)}
+
+/* HEADER */
+header{display:flex;align-items:center;gap:1.6vw;padding:1.1vmin 2vw;
+  background:linear-gradient(100deg,var(--brand) 0%,var(--brand-2) 100%);color:#fff;box-shadow:var(--shadow);z-index:40;position:relative}
+.brand{display:flex;align-items:center;gap:1vw}
+.brand img{height:5.8vmin;width:5.8vmin;border-radius:50%;background:#fff;padding:.4vmin;box-shadow:0 0 0 .35vmin rgba(255,255,255,.25)}
+.brand .name{font-family:'Outfit';font-weight:800;font-size:3.1vmin;letter-spacing:-.02em;line-height:1}
+.head-center{flex:1;text-align:center}
+.head-center .slide-name{font-family:'Outfit';font-weight:700;font-size:2.5vmin;letter-spacing:-.01em}
+.head-center .slide-kicker{font-size:1.2vmin;font-weight:600;letter-spacing:.22em;text-transform:uppercase;opacity:.82}
+.head-right{display:flex;align-items:center;gap:1.1vw}
+.live{display:flex;align-items:center;gap:.6vw;background:rgba(255,255,255,.16);padding:.7vmin 1.2vmin;border-radius:99px;font-weight:700;font-size:1.45vmin;letter-spacing:.04em}
+.dot{width:1.3vmin;height:1.3vmin;border-radius:50%;background:#37E27A;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(55,226,122,.6)}70%{box-shadow:0 0 0 1.6vmin rgba(55,226,122,0)}100%{box-shadow:0 0 0 0 rgba(55,226,122,0)}}
+.clock{text-align:right;line-height:1.1}
+.clock .t{font-family:'Outfit';font-weight:800;font-size:2.5vmin}
+.clock .u{font-size:1.15vmin;font-weight:600;opacity:.85}
+.hbtn{cursor:pointer;background:rgba(255,255,255,.16);border:none;color:#fff;width:4.8vmin;height:4.8vmin;border-radius:1.2vmin;
+  font-size:2.2vmin;display:grid;place-items:center;transition:.2s}
+.hbtn:hover{background:rgba(255,255,255,.3)}
+.hbtn.gear:hover{transform:rotate(40deg)}
+
+/* SLIDES */
+main{flex:1;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;padding:2.2vmin 2vw;opacity:0;pointer-events:none;display:flex;flex-direction:column;gap:1.7vmin;transition:opacity .5s}
+.slide.active{opacity:1;pointer-events:auto}
+@keyframes rise{from{opacity:0;transform:translateY(2.4vmin) scale(.985)}to{opacity:1;transform:none}}
+.slide.active .card{animation:rise .55s cubic-bezier(.2,.7,.2,1) both}
+
+.card{background:var(--card);border-radius:1.8vmin;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card.accent::before{content:"";position:absolute;left:0;top:0;bottom:0;width:.7vmin;background:var(--brand);z-index:1}
+.card.g::before{background:var(--green)}.card.b::before{background:var(--blue)}.card.y::before{background:var(--gold)}.card.r::before{background:var(--red)}
+.section-title{font-family:'Outfit';font-weight:800;font-size:2.2vmin;display:flex;align-items:center;gap:.8vw;color:var(--ink)}
+.section-title .ic{width:3.6vmin;height:3.6vmin;border-radius:1vmin;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:2vmin}
+
+/* SLIDE 1 */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4vw}
+.kpi{padding:2.2vmin 2vmin}
+.kpi .lbl{font-size:1.5vmin;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:.5vw}
+.kpi .val{font-family:'Outfit';font-weight:900;font-size:6.2vmin;line-height:1.02;letter-spacing:-.03em;margin-top:.6vmin}
+.kpi .val .cents{font-size:.46em;color:var(--ink-2);font-weight:800}
+.kpi .foot{font-size:1.4vmin;font-weight:600;color:var(--ink-2);margin-top:.4vmin}
+.kpi .pico{width:2.6vmin;height:2.6vmin;border-radius:.7vmin;display:grid;place-items:center;font-size:1.5vmin;color:#fff}
+.lower-row{flex:1;display:grid;grid-template-columns:1.05fr 1.35fr;gap:1.4vw;min-height:0}
+.mix{padding:2.4vmin 2.2vmin;display:flex;flex-direction:column}
+.mix .ch{display:flex;flex-direction:column;gap:2.6vmin;margin:auto 0}
+.mix-bar .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.8vmin}
+.mix-bar .nm{font-family:'Outfit';font-weight:800;font-size:2.6vmin}
+.mix-bar .pc{font-family:'Outfit';font-weight:900;font-size:3vmin}
+.mix-bar .track{height:2.6vmin;background:var(--bg-2);border-radius:99px;overflow:hidden}
+.mix-bar .fill{height:100%;border-radius:99px;width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+.mix-bar .sub{font-size:1.4vmin;font-weight:600;color:var(--ink-2);margin-top:.5vmin}
+.spark{padding:2.4vmin 2.2vmin;display:flex;flex-direction:column}
+.spark .bars{flex:1;display:flex;align-items:flex-end;gap:.6vw;margin-top:1.4vmin}
+.spark .b{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;gap:.6vmin;justify-content:flex-end}
+.spark .b .bar{width:72%;background:linear-gradient(180deg,var(--brand),var(--gold));border-radius:.6vmin .6vmin 0 0;height:0;transition:height .9s cubic-bezier(.2,.7,.2,1)}
+.spark .b.peak .bar{background:linear-gradient(180deg,var(--green),#5fd99a)}
+.spark .b .d{font-size:1.15vmin;font-weight:700;color:var(--ink-2)}
+.spark .b .v{font-size:1vmin;font-weight:700;color:var(--ink-2);white-space:nowrap;order:-1}
+
+/* SLIDE RANKING (vertical autoscroll) */
+.rank-wrap{flex:1;min-height:0;padding:1.4vmin 1.8vmin}
+.rank-scroll{height:100%;overflow:hidden;position:relative}
+.rank-list{display:flex;flex-direction:column;gap:.7vmin}
+.rkr{display:flex;align-items:center;gap:1.2vw;padding:.9vmin 1vw;border-radius:1.2vmin}
+.rkr:nth-child(even){background:var(--bg)}
+.rkr .pos{width:4vmin;height:4vmin;border-radius:1vmin;background:var(--bg-2);color:var(--ink-2);font-family:'Outfit';font-weight:900;font-size:2vmin;display:grid;place-items:center;flex-shrink:0}
+.rkr.top1 .pos{background:var(--gold);color:#fff}.rkr.top2 .pos{background:var(--brand);color:#fff}.rkr.top3 .pos{background:var(--brand-2);color:#fff}
+.rkr .nm{font-family:'Outfit';font-weight:700;font-size:2.3vmin;width:22vw;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rkr .track{flex:1;height:1.3vmin;background:var(--bg-2);border-radius:99px;overflow:hidden}
+.rkr .fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--gold));border-radius:99px;width:0;transition:width .9s ease}
+.rkr .v{font-family:'Outfit';font-weight:800;font-size:2.3vmin;width:11vw;text-align:right;flex-shrink:0}
+.rkr .s{font-size:1.4vmin;font-weight:600;color:var(--ink-2);width:11vw;text-align:right;flex-shrink:0}
+.scroll-hint{position:absolute;right:1.6vw;bottom:1vmin;font-size:1.3vmin;font-weight:700;color:var(--ink-2);opacity:.6;display:flex;align-items:center;gap:.4vw}
+
+/* SLIDE 3 */
+.s3{flex:1;display:grid;grid-template-columns:1.3fr 1fr;grid-template-rows:1fr auto;gap:1.4vw;min-height:0}
+.dow{padding:2.2vmin;grid-row:1/3;display:flex;flex-direction:column}
+.dow .bars{flex:1;display:flex;align-items:flex-end;gap:1vw;margin-top:1.6vmin}
+.dow .b{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;gap:.8vmin;justify-content:flex-end}
+.dow .b .bar{width:70%;background:linear-gradient(180deg,var(--brand),var(--brand-2));border-radius:.8vmin .8vmin 0 0;height:0;transition:height 1s cubic-bezier(.2,.7,.2,1)}
+.dow .b.hi .bar{background:linear-gradient(180deg,var(--green),#57d595)}
+.dow .b .d{font-family:'Outfit';font-weight:700;font-size:1.5vmin}
+.dow .b .v{font-size:1.15vmin;font-weight:700;color:var(--ink-2);order:-1}
+.callout{padding:2vmin 2.2vmin;display:flex;flex-direction:column;justify-content:center;gap:.3vmin}
+.callout .lbl{font-size:1.4vmin;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.callout .big{font-family:'Outfit';font-weight:900;font-size:3.4vmin;line-height:1.05}
+.callout .v{font-weight:700;font-size:1.9vmin;color:var(--ink-2)}
+.mods{grid-column:2;display:flex;gap:1vw}
+.mod{flex:1;padding:1.8vmin 2vmin}
+.mod .h{font-family:'Outfit';font-weight:800;font-size:2vmin;display:flex;align-items:center;gap:.6vw;margin-bottom:1vmin}
+.mod .h .tag{width:1.4vmin;height:1.4vmin;border-radius:.4vmin;background:var(--brand)}
+.mod .h .tag.e{background:var(--blue)}
+.mod .grid{display:grid;grid-template-columns:1fr 1fr;gap:1vmin 1vw}
+.mod .it .k{font-size:1.2vmin;font-weight:600;color:var(--ink-2)}
+.mod .it .n{font-family:'Outfit';font-weight:800;font-size:2.2vmin}
+
+/* SLIDE vs MÉDIA */
+.avg-head{padding:1.8vmin 2.4vmin;display:flex;align-items:center;gap:1.4vw}
+.avg-head .lbl{font-size:1.6vmin;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2)}
+.avg-head .v{font-family:'Outfit';font-weight:900;font-size:4vmin;color:var(--brand)}
+.avg-head .note{margin-left:auto;font-size:1.5vmin;font-weight:600;color:var(--ink-2);max-width:40vw;text-align:right}
+.avg-cols{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.4vw;min-height:0}
+.avg-col{padding:1.8vmin 2vmin;display:flex;flex-direction:column;min-height:0}
+.avg-col .h{font-family:'Outfit';font-weight:800;font-size:2vmin;margin-bottom:1vmin;display:flex;align-items:center;gap:.5vw}
+.avg-col .list{flex:1;display:flex;flex-direction:column;justify-content:space-around;min-height:0}
+.avgr{display:flex;align-items:center;gap:1vw;font-size:2vmin}
+.avgr .nm{font-family:'Outfit';font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avgr .fv{font-weight:600;color:var(--ink-2);font-size:1.6vmin}
+.avgr .pct{font-family:'Outfit';font-weight:900;font-size:2.2vmin;width:8vw;text-align:right}
+.avgr .pct.up{color:var(--green)}.avgr .pct.down{color:var(--red)}
+
+/* SLIDE COMPARATIVO */
+.cmp{padding:2.4vmin;display:flex;align-items:center;gap:3vw}
+.cmp .blk{text-align:center}
+.cmp .blk .lbl{font-size:1.5vmin;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.cmp .blk .v{font-family:'Outfit';font-weight:900;font-size:4.6vmin;line-height:1.05}
+.cmp .arrow{font-family:'Outfit';font-weight:900;font-size:3.4vmin;display:flex;align-items:center;gap:.5vw;padding:1.2vmin 2vmin;border-radius:1.4vmin}
+.cmp .arrow.up{color:var(--green);background:rgba(31,168,91,.12)}
+.cmp .arrow.down{color:var(--red);background:rgba(226,69,58,.12)}
+.cmp .ctx{margin-left:auto;text-align:right;font-size:1.7vmin;font-weight:600;color:var(--ink-2);max-width:26vw;line-height:1.4}
+.movers-row{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.4vw;min-height:0}
+.movers{padding:1.8vmin 2.2vmin;display:flex;flex-direction:column;min-height:0}
+.movers .h{font-family:'Outfit';font-weight:800;font-size:2.1vmin;margin-bottom:.6vmin}
+.movers .list{flex:1;display:flex;flex-direction:column;justify-content:space-around;min-height:0}
+.mv{display:flex;align-items:center;gap:.8vw;font-size:2.1vmin}
+.mv .rk{font-family:'Outfit';font-weight:900;color:var(--ink-2);width:2vw}
+.mv .nm{font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mv .sub{font-size:1.4vmin;font-weight:600;color:var(--ink-2)}
+.mv .pct{font-family:'Outfit';font-weight:900;font-size:2.3vmin}
+.mv .pct.up{color:var(--green)}.mv .pct.down{color:var(--red)}
+
+/* SLIDE PROJEÇÃO */
+.proj-head{padding:2vmin 2.4vmin;display:grid;grid-template-columns:repeat(4,1fr) auto;gap:2vw;align-items:center}
+.proj-head .it .lbl{font-size:1.4vmin;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.proj-head .it .v{font-family:'Outfit';font-weight:900;font-size:3.2vmin;line-height:1.1;margin-top:.3vmin}
+.proj-head .gauge{width:13vmin;height:13vmin}
+.proj-wrap{flex:1;min-height:0;padding:1.2vmin 1.8vmin}
+.proj-list{display:flex;flex-direction:column;gap:.7vmin}
+.pjr{display:flex;align-items:center;gap:1.2vw;padding:.8vmin 1vw;border-radius:1.2vmin}
+.pjr:nth-child(even){background:var(--bg)}
+.pjr .pos{width:3.6vmin;height:3.6vmin;border-radius:1vmin;background:var(--bg-2);color:var(--ink-2);font-family:'Outfit';font-weight:900;font-size:1.7vmin;display:grid;place-items:center;flex-shrink:0}
+.pjr .nm{font-family:'Outfit';font-weight:700;font-size:2.1vmin;width:20vw;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pjr .track{flex:1;height:1.2vmin;background:var(--bg-2);border-radius:99px;overflow:hidden;position:relative}
+.pjr .fill-real{height:100%;background:var(--brand);border-radius:99px;width:0;transition:width .9s ease;position:absolute;left:0;top:0;z-index:2}
+.pjr .fill-proj{height:100%;background:repeating-linear-gradient(90deg,var(--gold),var(--gold) 1vmin,transparent 1vmin,transparent 2vmin);border-radius:99px;width:0;transition:width .9s ease;position:absolute;left:0;top:0;opacity:.6}
+.pjr .real{font-family:'Outfit';font-weight:800;font-size:2vmin;width:9vw;text-align:right;flex-shrink:0}
+.pjr .proj{font-family:'Outfit';font-weight:800;font-size:2vmin;width:9vw;text-align:right;flex-shrink:0;color:var(--brand)}
+
+/* TICKER */
+#ticker{height:5.2vmin;background:var(--ink);color:#fff;display:flex;align-items:center;overflow:hidden;position:relative;z-index:30}
+[data-theme="dark"] #ticker{background:#000}
+#ticker .tag{background:var(--brand);height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 1.4vw;flex-shrink:0;z-index:2;box-shadow:.6vmin 0 1.4vmin rgba(0,0,0,.3)}
+#ticker .tag .b{font-family:'Outfit';font-weight:900;font-size:1.7vmin;letter-spacing:.05em;line-height:1}
+#ticker .tag .p{font-size:1.1vmin;font-weight:700;opacity:.92;letter-spacing:.03em;margin-top:.2vmin}
+#ticker .tape{display:flex;white-space:nowrap;will-change:transform}
+#ticker .ti{display:flex;align-items:center;gap:.6vw;padding:0 1.8vw;font-size:1.7vmin;border-right:1px solid rgba(255,255,255,.1)}
+#ticker .ti .nm{font-weight:700}
+#ticker .ti .v{font-variant-numeric:tabular-nums;font-weight:600;opacity:.9}
+#ticker .ti .ch{font-family:'Outfit';font-weight:800;display:flex;align-items:center;gap:.2vw}
+#ticker .ti .ch.up{color:#37E27A}#ticker .ti .ch.down{color:#FF6B5E}
+
+#dots{position:fixed;bottom:6.6vmin;left:50%;transform:translateX(-50%);display:flex;gap:1vw;z-index:50}
+#dots .d{width:1.1vmin;height:1.1vmin;border-radius:99px;background:rgba(0,0,0,.18);transition:.3s}
+[data-theme="dark"] #dots .d{background:rgba(255,255,255,.2)}
+#dots .d.on{width:3.4vmin;background:var(--brand)}
+
+#flash{position:fixed;top:8vmin;right:2vw;background:var(--green);color:#fff;padding:1vmin 1.8vmin;border-radius:1vmin;font-weight:800;font-size:1.6vmin;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(-1vmin);transition:.4s;z-index:70;pointer-events:none}
+#flash.show{opacity:1;transform:translateY(0)}
+#paused-badge{position:fixed;top:8vmin;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:1vmin 2vmin;border-radius:99px;font-family:'Outfit';font-weight:800;font-size:1.7vmin;z-index:70;display:none;align-items:center;gap:.6vw;box-shadow:var(--shadow-lg)}
+#paused-badge.show{display:flex}
+
+/* CONFIG */
+#cfg{position:fixed;inset:0;background:rgba(20,12,6,.55);backdrop-filter:blur(3px);display:none;place-items:center;z-index:100}
+#cfg.open{display:grid}
+.cfg-box{background:var(--card);width:min(56vw,720px);max-height:88vh;overflow:auto;border-radius:2vmin;padding:3vmin 3.4vmin;box-shadow:var(--shadow-lg)}
+.cfg-box h2{font-size:2.6vmin;display:flex;align-items:center;gap:.7vw;margin-bottom:.4vmin}
+.cfg-box .desc{color:var(--ink-2);font-size:1.5vmin;margin-bottom:2.4vmin;font-weight:500}
+.field{margin-bottom:2vmin}
+.field label{display:block;font-weight:700;font-size:1.6vmin;margin-bottom:.7vmin}
+.field input[type=text],.field input[type=number]{width:100%;padding:1.3vmin 1.5vmin;border:2px solid var(--line);border-radius:1.1vmin;font-size:1.6vmin;font-family:'Inter';background:var(--bg);color:var(--ink)}
+.field input:focus{outline:none;border-color:var(--brand)}
+.field .hint{font-size:1.3vmin;color:var(--ink-2);margin-top:.5vmin}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:1.4vw}
+.checks{display:flex;flex-wrap:wrap;gap:1vw}
+.chk{display:flex;align-items:center;gap:.6vw;background:var(--bg);padding:1vmin 1.4vmin;border-radius:1vmin;font-weight:600;font-size:1.5vmin;cursor:pointer}
+.chk input{width:2vmin;height:2vmin;accent-color:var(--brand)}
+.seg{display:inline-flex;background:var(--bg);border-radius:1vmin;padding:.4vmin;flex-wrap:wrap}
+.seg button{border:none;background:none;padding:1vmin 1.6vmin;border-radius:.7vmin;font-weight:700;font-size:1.5vmin;cursor:pointer;color:var(--ink-2);font-family:'Inter'}
+.seg button.on{background:var(--brand);color:#fff}
+.cfg-actions{display:flex;gap:1vw;justify-content:flex-end;margin-top:1vmin;flex-wrap:wrap}
+.btn{padding:1.3vmin 2.4vmin;border:none;border-radius:1.1vmin;font-weight:800;font-size:1.6vmin;cursor:pointer;font-family:'Outfit'}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.ghost{background:var(--bg);color:var(--ink)}
+.btn:active{transform:translateY(1px)}
+#err{position:fixed;bottom:7vmin;left:2vw;background:var(--red);color:#fff;padding:1vmin 1.6vmin;border-radius:1vmin;font-weight:700;font-size:1.4vmin;z-index:80;display:none}
+</style>
 </head>
 <body>
-
-<!-- ============================================================
-     ESTRUTURA DO APP (SPA)
-     #app envolve tudo; #conteudo rola; #bottom-nav fica fixo.
-     ============================================================ -->
+<div id="rot"></div>
 <div id="app">
+  <header>
+    <div class="brand">
+      <img id="logo" alt="LanLan">
+      <div class="name">LanLan</div>
+    </div>
+    <div class="head-center">
+      <div class="slide-kicker">Painel da Diretoria</div>
+      <div class="slide-name" id="slideName">Visão Geral da Rede</div>
+    </div>
+    <div class="head-right">
+      <div class="live"><span class="dot"></span> AO VIVO</div>
+      <div class="clock"><div class="t num" id="clock">--:--:--</div><div class="u">Atualizado <span id="lastUpd">—</span></div></div>
+      <button class="hbtn" id="playBtn" title="Pausar / Retomar">⏸</button>
+      <button class="hbtn gear" id="gearBtn" title="Configurações">⚙</button>
+    </div>
+  </header>
 
-  <!-- =============================================
-       CONTEÚDO DAS TELAS
-       ============================================= -->
-  <div id="conteudo">
-
-    <!-- ==========================================
-         TELA 1: PDV – FRENTE DE CAIXA
-         ========================================== -->
-    <section id="tela-pdv" class="tela ativa">
-
-      <!-- Cabeçalho -->
-      <div class="tela-header">
-        <h1>🥖 Frente de Caixa</h1>
-        <p>Selecione os produtos e finalize a venda</p>
+  <main id="main">
+    <!-- 1 VISÃO GERAL -->
+    <section class="slide active" data-name="Visão Geral da Rede" id="s1">
+      <div class="kpi-row">
+        <div class="card accent kpi"><div class="lbl"><span class="pico" style="background:var(--brand)">₣</span> Faturamento no período</div><div class="val num" data-kpi="fat">—</div><div class="foot" id="fat-foot">—</div></div>
+        <div class="card accent g kpi"><div class="lbl"><span class="pico" style="background:var(--green)">∅</span> Ticket médio</div><div class="val num" data-kpi="ticket">—</div><div class="foot">por pedido</div></div>
+        <div class="card accent b kpi"><div class="lbl"><span class="pico" style="background:var(--blue)">#</span> Pedidos</div><div class="val num" data-kpi="ped">—</div><div class="foot">no período</div></div>
+        <div class="card accent y kpi"><div class="lbl"><span class="pico" style="background:var(--gold)">↻</span> Média por dia</div><div class="val num" data-kpi="diaria">—</div><div class="foot">faturamento diário</div></div>
       </div>
-
-      <!-- Identificação do cliente por telefone -->
-      <div style="padding: 12px 12px 0;">
-        <div class="painel-cliente">
-          <div class="painel-cliente-titulo">👤 Identificar Cliente</div>
-          <div class="cliente-busca-row">
-            <input type="tel" id="input-tel-cliente" placeholder="(88) 99999-9999" maxlength="15" />
-            <button onclick="buscarClientePorTelefone()">Buscar</button>
-          </div>
-
-          <!-- Área exibida quando cliente é encontrado -->
-          <div id="info-cliente">
-            <div class="cliente-info-card">
-              <div>
-                <div class="cliente-info-nome" id="cliente-nome-exibido">—</div>
-                <div style="font-size:0.75rem;color:var(--cor-texto-suave);">Cliente identificado</div>
-              </div>
-              <div>
-                <div class="cliente-info-saldo" id="cliente-saldo-exibido">R$ 0,00</div>
-                <div style="font-size:0.68rem;color:var(--cor-texto-suave);text-align:right;">saldo cashback</div>
-              </div>
-            </div>
-            <!-- Toggle: usar o cashback como desconto? -->
-            <div class="cashback-toggle">
-              <input type="checkbox" id="usar-cashback" />
-              <label for="usar-cashback">Usar cashback como desconto nesta compra</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Campo de busca de produto -->
-      <div class="pdv-busca">
-        <input type="text" id="busca-produto" placeholder="Buscar produto..." oninput="filtrarProdutos()" />
-      </div>
-
-      <!-- Grid de produtos (renderizado via JS) -->
-      <div id="grid-produtos">
-        <!-- Preenchido dinamicamente pelo JavaScript -->
-      </div>
-
-      <!-- Título do carrinho -->
-      <div class="secao-titulo" id="titulo-carrinho" style="display:none;">
-        🛒 Carrinho
-      </div>
-
-      <!-- Lista de itens no carrinho (renderizada via JS) -->
-      <div id="lista-carrinho">
-        <!-- Preenchido dinamicamente -->
-      </div>
-
-      <!-- Resumo de fechamento da venda -->
-      <div id="resumo-venda" style="display:none;">
-        <div class="resumo-venda">
-          <div class="resumo-linha">
-            <span class="resumo-label">Subtotal</span>
-            <span class="resumo-valor" id="res-subtotal">R$ 0,00</span>
-          </div>
-          <!-- Linha de desconto cashback (oculta até usar cashback) -->
-          <div class="resumo-linha cashback-linha" id="res-linha-cashback" style="display:none;">
-            <span class="resumo-label">Desconto cashback</span>
-            <span class="resumo-valor" id="res-desconto">- R$ 0,00</span>
-          </div>
-          <div class="resumo-linha destaque">
-            <span style="font-weight:700;font-size:1rem;">Total a Pagar</span>
-            <span class="resumo-valor" id="res-total">R$ 0,00</span>
-          </div>
-          <div class="divisor"></div>
-          <div class="resumo-linha cashback-linha">
-            <span class="resumo-label">💰 Cashback gerado nesta venda</span>
-            <span class="resumo-valor" id="res-cashback-gerado" style="color:var(--cor-secundaria);">R$ 0,00</span>
-          </div>
-        </div>
-
-        <!-- Botão de finalizar venda -->
-        <div class="btn-finalizar">
-          <button class="btn-primario" id="btn-finalizar" onclick="finalizarVenda()">
-            ✅ Finalizar Venda
-          </button>
-        </div>
-        <div style="height:16px;"></div>
+      <div class="lower-row">
+        <div class="card accent mix"><div class="section-title"><span class="ic">⇄</span> Mix de canais</div><div class="ch" id="mixWrap"></div></div>
+        <div class="card accent y spark"><div class="section-title"><span class="ic">📈</span> Faturamento da rede por dia</div><div class="bars" id="sparkBars"></div></div>
       </div>
     </section>
 
-    <!-- ==========================================
-         TELA 2: PRODUTOS & CATEGORIAS
-         ========================================== -->
-    <section id="tela-produtos" class="tela">
-
-      <div class="tela-header">
-        <h1>📦 Produtos & Categorias</h1>
-        <p>Gerencie seu cardápio</p>
+    <!-- 2 RANKING -->
+    <section class="slide" data-name="Ranking de Lojas" id="s2">
+      <div class="section-title"><span class="ic">🏆</span> Ranking de Lojas — faturamento no período</div>
+      <div class="card accent rank-wrap">
+        <div class="rank-scroll autoscroll" id="rankScroll"><div class="rank-list" id="rankList"></div></div>
+        <div class="scroll-hint">↓ rola automaticamente</div>
       </div>
-
-      <!-- Abas internas: Categorias | Produtos -->
-      <div class="abas-internas">
-        <button class="aba-interna-btn ativa" onclick="alternarAbaInterna('categorias', this)">Categorias</button>
-        <button class="aba-interna-btn" onclick="alternarAbaInterna('produtos-cat', this)">Produtos</button>
-      </div>
-
-      <!-- ---- ABA: CATEGORIAS ---- -->
-      <div id="aba-categorias" class="aba-interna-conteudo ativa">
-        <div class="card">
-          <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px;font-size:0.95rem;">
-            Nova Categoria
-          </div>
-          <div class="campo">
-            <label>Nome da Categoria</label>
-            <input type="text" id="input-nome-cat" placeholder="Ex: Pães, Doces, Bebidas..." />
-          </div>
-          <button class="btn-primario" onclick="salvarCategoria()">+ Adicionar Categoria</button>
-        </div>
-
-        <div class="secao-titulo">Categorias Cadastradas</div>
-        <div class="card" style="padding:0;overflow:hidden;">
-          <div id="lista-categorias">
-            <!-- Renderizado via JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- ---- ABA: PRODUTOS ---- -->
-      <div id="aba-produtos-cat" class="aba-interna-conteudo">
-        <div class="card">
-          <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px;font-size:0.95rem;">
-            Novo Produto
-          </div>
-          <div class="campo">
-            <label>Nome do Produto</label>
-            <input type="text" id="input-nome-prod" placeholder="Ex: Pão de Queijo" />
-          </div>
-          <div class="campo">
-            <label>Preço de Venda (R$)</label>
-            <input type="number" id="input-preco-prod" placeholder="0,00" step="0.01" min="0" />
-          </div>
-          <div class="campo">
-            <label>Categoria</label>
-            <select id="select-cat-prod">
-              <option value="">Selecione uma categoria...</option>
-            </select>
-          </div>
-          <div class="campo">
-            <label class="cashback-toggle" style="padding:12px 14px;background:var(--cor-fundo);border-radius:10px;border:1.5px solid var(--cor-borda);">
-              <input type="checkbox" id="check-gera-cashback" style="width:20px;height:20px;accent-color:var(--cor-secundaria);" />
-              <span style="font-size:0.88rem;font-weight:500;">💰 Produto gera/permite cashback</span>
-            </label>
-          </div>
-          <button class="btn-primario" onclick="salvarProduto()">+ Adicionar Produto</button>
-        </div>
-
-        <div class="secao-titulo">Produtos Cadastrados</div>
-        <div class="card" style="padding:0;overflow:hidden;">
-          <div id="lista-produtos-cat">
-            <!-- Renderizado via JS -->
-          </div>
-        </div>
-      </div>
-
     </section>
 
-    <!-- ==========================================
-         TELA 3: CLIENTES & CASHBACK
-         ========================================== -->
-    <section id="tela-clientes" class="tela">
-
-      <div class="tela-header">
-        <h1>💰 Clientes & Cashback</h1>
-        <p>Cadastre e consulte clientes</p>
+    <!-- 3 DIAS & MODALIDADES -->
+    <section class="slide" data-name="Dias & Modalidades" id="s3">
+      <div class="section-title"><span class="ic">📅</span> Comportamento por dia e por modalidade</div>
+      <div class="s3">
+        <div class="card accent dow"><div class="section-title" style="font-size:1.9vmin"><span class="ic" style="width:3vmin;height:3vmin;font-size:1.7vmin">∑</span> Faturamento por dia da semana</div><div class="bars" id="dowBars"></div></div>
+        <div class="card accent g callout" id="bestDay"></div>
+        <div class="card accent y callout" id="worstDay"></div>
+        <div class="mods"><div class="card accent mod" id="modBalcao"></div><div class="card accent b mod" id="modEnc"></div></div>
       </div>
-
-      <!-- Formulário de novo cliente -->
-      <div class="card">
-        <div style="font-family:'Sora',sans-serif;font-weight:700;margin-bottom:14px;font-size:0.95rem;">
-          Novo Cliente
-        </div>
-        <div class="campo">
-          <label>Nome Completo</label>
-          <input type="text" id="input-nome-cliente" placeholder="Ex: Maria Silva" />
-        </div>
-        <div class="campo">
-          <label>Telefone (WhatsApp)</label>
-          <input type="tel" id="input-tel-novo-cliente" placeholder="(88) 99999-9999" maxlength="15" />
-        </div>
-        <button class="btn-primario" onclick="salvarCliente()">+ Cadastrar Cliente</button>
-      </div>
-
-      <!-- Busca de cliente para consultar saldo/histórico -->
-      <div class="card" style="padding:14px;">
-        <div class="painel-cliente-titulo">🔍 Consultar Cliente</div>
-        <div class="cliente-busca-row">
-          <input type="tel" id="input-tel-consulta" placeholder="(88) 99999-9999" maxlength="15" />
-          <button onclick="consultarCliente()">Buscar</button>
-        </div>
-        <div id="painel-consulta-cliente" style="margin-top:14px;display:none;">
-          <!-- Detalhes do cliente consultado -->
-        </div>
-      </div>
-
-      <!-- Lista de todos os clientes -->
-      <div class="secao-titulo">Clientes Cadastrados</div>
-      <div id="lista-clientes">
-        <!-- Renderizado via JS -->
-      </div>
-      <div style="height:12px;"></div>
-
     </section>
 
-  </div><!-- /conteudo -->
-
-  <!-- ============================================================
-       BARRA DE NAVEGAÇÃO INFERIOR
-       3 botões: PDV | Produtos | Clientes
-       ============================================================ -->
-  <nav id="bottom-nav">
-
-    <!-- Botão: PDV -->
-    <button class="nav-btn ativo" onclick="navegarPara('pdv', this)">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-1.5 7.5M17 13l1.5 7.5M9 20.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Zm7 0a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/>
-      </svg>
-      <!-- Badge com quantidade de itens no carrinho -->
-      <div class="nav-badge" id="badge-carrinho">0</div>
-      <span>PDV</span>
-    </button>
-
-    <!-- Botão: Produtos -->
-    <button class="nav-btn" onclick="navegarPara('produtos', this)">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2ZM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-      </svg>
-      <span>Produtos</span>
-    </button>
-
-    <!-- Botão: Clientes -->
-    <button class="nav-btn" onclick="navegarPara('clientes', this)">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-      </svg>
-      <span>Clientes</span>
-    </button>
-
-  </nav>
-
-</div><!-- /app -->
-
-<!-- Toast de notificação (mensagens de feedback) -->
-<div id="toast"></div>
-
-<!-- ============================================================
-     FIREBASE SDK (importado via CDN – versão modular)
-     ============================================================ -->
-<script type="module">
-  // ============================================================
-  // IMPORTAÇÕES DO FIREBASE
-  // Usamos a versão modular (ESM) do Firebase v9+
-  // ============================================================
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getFirestore,
-    collection,
-    doc,
-    addDoc,
-    getDocs,
-    getDoc,
-    updateDoc,
-    deleteDoc,
-    query,
-    where,
-    orderBy,
-    onSnapshot,
-    runTransaction,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // ============================================================
-  // CONFIGURAÇÃO DO FIREBASE
-  // Preencha com os dados do seu projeto no Firebase Console.
-  // ============================================================
-  const firebaseConfig = {
-    apiKey: "AIzaSyDTupG68ICzAvEYT3ZV_bUMDjhq4qM_mQw",
-    authDomain: "trialcrm-d0cf2.firebaseapp.com",
-    projectId: "trialcrm-d0cf2",
-    storageBucket: "trialcrm-d0cf2.firebasestorage.app",
-    messagingSenderId: "778451518436",
-    appId: "1:778451518436:web:bb15b2ccb1d5eb516bfdf1"
-  };
-
-  // Inicializa o app Firebase e o banco Firestore
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-
-  // ============================================================
-  // CONSTANTE GLOBAL: PERCENTUAL DE CASHBACK
-  // Altere este valor para mudar a porcentagem de cashback gerada.
-  // 0.05 = 5% | 0.03 = 3% | 0.10 = 10%
-  // ============================================================
-  const PERCENTUAL_CASHBACK = 0.05;
-
-  // ============================================================
-  // ESTADO LOCAL DA APLICAÇÃO
-  // Variáveis em memória que controlam o estado atual do app.
-  // ============================================================
-  let carrinho        = [];   // Array de itens adicionados ao carrinho
-  let clienteAtual    = null; // Objeto do cliente identificado no PDV
-  let produtosCache   = [];   // Cache dos produtos para filtragem rápida
-  let categoriasCache = [];   // Cache das categorias para montar selects
-
-  // ============================================================
-  // UTILITÁRIOS
-  // ============================================================
-
-  /** Formata número para moeda brasileira: 5.9 → "R$ 5,90" */
-  function formatarMoeda(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-
-  /** Formata data ISO para exibição amigável */
-  function formatarData(timestamp) {
-    if (!timestamp) return '—';
-    const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-  }
-
-  /** Exibe toast de notificação por 2,5 segundos */
-  function mostrarToast(msg, tipo = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'visivel' + (tipo ? ' toast-' + tipo : '');
-    clearTimeout(window._toastTimer);
-    window._toastTimer = setTimeout(() => { t.className = ''; }, 2800);
-  }
-
-  /** Retorna as iniciais do nome para o avatar */
-  function iniciais(nome) {
-    return nome.trim().split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
-  }
-
-  // ============================================================
-  // NAVEGAÇÃO ENTRE TELAS (SPA)
-  // Esconde todas as telas e exibe apenas a selecionada.
-  // ============================================================
-  function navegarPara(tela, btnClicado) {
-    // Oculta todas as telas
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    // Remove "ativo" de todos os botões de nav
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
-
-    // Exibe a tela correta e marca o botão como ativo
-    document.getElementById('tela-' + tela).classList.add('ativa');
-    btnClicado.classList.add('ativo');
-
-    // Rola de volta para o topo ao trocar de tela
-    document.getElementById('conteudo').scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  // Expõe para uso no HTML (onclick="")
-  window.navegarPara = navegarPara;
-
-  // ============================================================
-  // ABAS INTERNAS (dentro de "Produtos & Categorias")
-  // ============================================================
-  function alternarAbaInterna(aba, btnClicado) {
-    // Oculta todos os conteúdos de aba interna
-    document.querySelectorAll('.aba-interna-conteudo').forEach(el => el.classList.remove('ativa'));
-    document.querySelectorAll('.aba-interna-btn').forEach(el => el.classList.remove('ativa'));
-
-    // Ativa a aba e botão selecionados
-    document.getElementById('aba-' + aba).classList.add('ativa');
-    btnClicado.classList.add('ativa');
-  }
-  window.alternarAbaInterna = alternarAbaInterna;
-
-  // ============================================================
-  // MÓDULO: CATEGORIAS
-  // ============================================================
-
-  /**
-   * Salva uma nova categoria no Firestore.
-   * Coleção: "categorias" → { nome: string }
-   */
-  async function salvarCategoria() {
-    const nomeInput = document.getElementById('input-nome-cat');
-    const nome = nomeInput.value.trim();
-    if (!nome) { mostrarToast('Informe o nome da categoria', 'erro'); return; }
-
-    try {
-      await addDoc(collection(db, 'categorias'), { nome });
-      nomeInput.value = '';
-      mostrarToast('Categoria adicionada! ✅', 'sucesso');
-    } catch (err) {
-      console.error('Erro ao salvar categoria:', err);
-      mostrarToast('Erro ao salvar. Verifique a conexão.', 'erro');
-    }
-  }
-  window.salvarCategoria = salvarCategoria;
-
-  /**
-   * Exclui uma categoria do Firestore.
-   * @param {string} id - ID do documento da categoria.
-   */
-  async function excluirCategoria(id) {
-    if (!confirm('Excluir esta categoria?')) return;
-    try {
-      await deleteDoc(doc(db, 'categorias', id));
-      mostrarToast('Categoria removida.', 'sucesso');
-    } catch (err) {
-      mostrarToast('Erro ao excluir.', 'erro');
-    }
-  }
-  window.excluirCategoria = excluirCategoria;
-
-  /**
-   * Renderiza a lista de categorias na tela.
-   * Chamado pelo listener em tempo real do Firestore.
-   */
-  function renderizarCategorias(docs) {
-    const el = document.getElementById('lista-categorias');
-    if (docs.length === 0) {
-      el.innerHTML = `<div class="lista-vazia">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2m14 0V9a2 2 0 0 0-2-2M5 11V9a2 2 0 0 1 2-2m0 0V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M7 7h10"/></svg>
-        <p>Nenhuma categoria cadastrada.</p></div>`;
-      return;
-    }
-
-    el.innerHTML = docs.map(d => `
-      <div class="lista-item">
-        <div class="lista-item-info">
-          <div class="lista-item-nome">📁 ${d.nome}</div>
-        </div>
-        <button class="btn-excluir" onclick="excluirCategoria('${d.id}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </button>
-      </div>`).join('');
-  }
-
-  // ============================================================
-  // MÓDULO: PRODUTOS
-  // ============================================================
-
-  /**
-   * Salva um novo produto no Firestore.
-   * Coleção: "produtos" → { nome, preco, categoria_id, gera_cashback }
-   */
-  async function salvarProduto() {
-    const nome        = document.getElementById('input-nome-prod').value.trim();
-    const preco       = parseFloat(document.getElementById('input-preco-prod').value);
-    const catId       = document.getElementById('select-cat-prod').value;
-    const geraCashbk  = document.getElementById('check-gera-cashback').checked;
-
-    if (!nome)        { mostrarToast('Informe o nome do produto', 'erro'); return; }
-    if (isNaN(preco) || preco <= 0) { mostrarToast('Informe um preço válido', 'erro'); return; }
-    if (!catId)       { mostrarToast('Selecione uma categoria', 'erro'); return; }
-
-    try {
-      await addDoc(collection(db, 'produtos'), {
-        nome,
-        preco,
-        categoria_id: catId,
-        gera_cashback: geraCashbk
-      });
-      // Limpa os campos do formulário
-      document.getElementById('input-nome-prod').value    = '';
-      document.getElementById('input-preco-prod').value   = '';
-      document.getElementById('select-cat-prod').value    = '';
-      document.getElementById('check-gera-cashback').checked = false;
-      mostrarToast('Produto adicionado! ✅', 'sucesso');
-    } catch (err) {
-      console.error('Erro ao salvar produto:', err);
-      mostrarToast('Erro ao salvar. Verifique a conexão.', 'erro');
-    }
-  }
-  window.salvarProduto = salvarProduto;
-
-  /**
-   * Exclui um produto do Firestore.
-   */
-  async function excluirProduto(id) {
-    if (!confirm('Excluir este produto?')) return;
-    try {
-      await deleteDoc(doc(db, 'produtos', id));
-      mostrarToast('Produto removido.', 'sucesso');
-    } catch (err) {
-      mostrarToast('Erro ao excluir.', 'erro');
-    }
-  }
-  window.excluirProduto = excluirProduto;
-
-  /**
-   * Renderiza a lista de produtos no cadastro e
-   * atualiza o cache + grid do PDV.
-   */
-  function renderizarProdutos(docs) {
-    // Atualiza cache para uso no PDV
-    produtosCache = docs;
-
-    // ---- Lista na tela Produtos & Categorias ----
-    const elLista = document.getElementById('lista-produtos-cat');
-    if (docs.length === 0) {
-      elLista.innerHTML = `<div class="lista-vazia">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2ZM16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-        <p>Nenhum produto cadastrado.</p></div>`;
-    } else {
-      elLista.innerHTML = docs.map(p => {
-        // Busca nome da categoria no cache
-        const cat = categoriasCache.find(c => c.id === p.categoria_id);
-        return `
-          <div class="lista-item">
-            <div class="lista-item-info">
-              <div class="lista-item-nome">${p.nome}</div>
-              <div class="lista-item-sub">${cat ? cat.nome : 'Sem categoria'} ${p.gera_cashback ? '· 💰 Cashback' : ''}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="lista-item-preco">${formatarMoeda(p.preco)}</div>
-              <button class="btn-excluir" onclick="excluirProduto('${p.id}')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-              </button>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    // ---- Atualiza o grid do PDV ----
-    renderizarGridPDV(docs);
-  }
-
-  /**
-   * Emojis padrão por categoria (mapeamento simples).
-   * Se a categoria não for reconhecida, usa 🛍️.
-   */
-  function emojiProduto(nomeCategoria) {
-    const mapa = {
-      'pão': '🥖', 'paes': '🥖', 'pães': '🥖',
-      'doce': '🍰', 'doces': '🍰',
-      'bebida': '🥤', 'bebidas': '🥤',
-      'salgado': '🥪', 'salgados': '🥪',
-      'bolo': '🎂', 'bolos': '🎂',
-      'café': '☕', 'cafe': '☕',
-    };
-    if (!nomeCategoria) return '🛍️';
-    const chave = nomeCategoria.toLowerCase();
-    for (const [k, v] of Object.entries(mapa)) {
-      if (chave.includes(k)) return v;
-    }
-    return '🛍️';
-  }
-
-  /**
-   * Renderiza o grid de produtos clicáveis no PDV.
-   * @param {Array} produtos - lista filtrada de produtos a exibir.
-   */
-  function renderizarGridPDV(produtos) {
-    const grid = document.getElementById('grid-produtos');
-
-    if (!produtos || produtos.length === 0) {
-      grid.innerHTML = `<div class="lista-vazia" style="grid-column:1/-1;">
-        <p>Nenhum produto encontrado.</p></div>`;
-      return;
-    }
-
-    grid.innerHTML = produtos.map(p => {
-      const cat   = categoriasCache.find(c => c.id === p.categoria_id);
-      const emoji = emojiProduto(cat ? cat.nome : '');
-      return `
-        <div class="produto-card" onclick="adicionarAoCarrinho('${p.id}')">
-          <div class="produto-card-emoji">${emoji}</div>
-          <div class="produto-card-nome">${p.nome}</div>
-          <div class="produto-card-preco">${formatarMoeda(p.preco)}</div>
-          ${p.gera_cashback ? '<div class="produto-card-badge">💰 Cashback</div>' : ''}
-        </div>`;
-    }).join('');
-  }
-
-  /**
-   * Filtra o grid do PDV conforme o texto digitado na busca.
-   */
-  function filtrarProdutos() {
-    const termo = document.getElementById('busca-produto').value.toLowerCase().trim();
-    const filtrados = termo
-      ? produtosCache.filter(p => p.nome.toLowerCase().includes(termo))
-      : produtosCache;
-    renderizarGridPDV(filtrados);
-  }
-  window.filtrarProdutos = filtrarProdutos;
-
-  // ============================================================
-  // MÓDULO: CARRINHO DE COMPRAS
-  // ============================================================
-
-  /**
-   * Adiciona um produto ao carrinho ou incrementa sua quantidade.
-   * @param {string} produtoId - ID do produto clicado no grid.
-   */
-  function adicionarAoCarrinho(produtoId) {
-    const produto = produtosCache.find(p => p.id === produtoId);
-    if (!produto) return;
-
-    // Verifica se o produto já está no carrinho
-    const existente = carrinho.find(item => item.produto_id === produtoId);
-    if (existente) {
-      existente.qtd++;
-    } else {
-      carrinho.push({
-        produto_id:    produtoId,
-        nome:          produto.nome,
-        preco_unitario: produto.preco,
-        gera_cashback: produto.gera_cashback,
-        qtd:           1
-      });
-    }
-
-    // Feedback visual de "flash" no card do produto (opcional)
-    mostrarToast(`${produto.nome} adicionado`);
-    atualizarCarrinho();
-  }
-  window.adicionarAoCarrinho = adicionarAoCarrinho;
-
-  /**
-   * Incrementa a quantidade de um item do carrinho.
-   */
-  function incrementarItem(produtoId) {
-    const item = carrinho.find(i => i.produto_id === produtoId);
-    if (item) { item.qtd++; atualizarCarrinho(); }
-  }
-  window.incrementarItem = incrementarItem;
-
-  /**
-   * Decrementa a quantidade ou remove o item se chegar a zero.
-   */
-  function decrementarItem(produtoId) {
-    const idx  = carrinho.findIndex(i => i.produto_id === produtoId);
-    if (idx === -1) return;
-    carrinho[idx].qtd--;
-    if (carrinho[idx].qtd <= 0) carrinho.splice(idx, 1);
-    atualizarCarrinho();
-  }
-  window.decrementarItem = decrementarItem;
-
-  /**
-   * Re-renderiza o carrinho e atualiza o resumo de valores.
-   * Chamado sempre que o carrinho muda.
-   */
-  function atualizarCarrinho() {
-    const lista         = document.getElementById('lista-carrinho');
-    const tituloCarr    = document.getElementById('titulo-carrinho');
-    const resumoDiv     = document.getElementById('resumo-venda');
-    const badge         = document.getElementById('badge-carrinho');
-
-    // Atualiza badge de quantidade na nav
-    const totalItens = carrinho.reduce((s, i) => s + i.qtd, 0);
-    badge.textContent = totalItens;
-    badge.classList.toggle('visivel', totalItens > 0);
-
-    if (carrinho.length === 0) {
-      lista.innerHTML = '';
-      tituloCarr.style.display  = 'none';
-      resumoDiv.style.display   = 'none';
-      return;
-    }
-
-    // Exibe o título e o resumo
-    tituloCarr.style.display = 'block';
-    resumoDiv.style.display  = 'block';
-
-    // Renderiza cada item do carrinho
-    lista.innerHTML = carrinho.map(item => `
-      <div class="carrinho-item">
-        <div class="carrinho-item-nome">${item.nome}</div>
-        <div class="qtd-controle">
-          <button class="qtd-btn" onclick="decrementarItem('${item.produto_id}')">−</button>
-          <span class="qtd-valor">${item.qtd}</span>
-          <button class="qtd-btn" onclick="incrementarItem('${item.produto_id}')">+</button>
-        </div>
-        <div class="carrinho-item-preco">${formatarMoeda(item.preco_unitario * item.qtd)}</div>
-      </div>`).join('');
-
-    // Calcula valores do resumo
-    calcularResumo();
-  }
-
-  /**
-   * Calcula e exibe o resumo financeiro da venda:
-   * subtotal, desconto cashback, total e cashback que será gerado.
-   */
-  function calcularResumo() {
-    const subtotal = carrinho.reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
-
-    // Calcula cashback a gerar apenas sobre itens com flag true
-    const baseParaCashback = carrinho
-      .filter(i => i.gera_cashback)
-      .reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
-    const cashbackGerado = baseParaCashback * PERCENTUAL_CASHBACK;
-
-    // Verifica se o operador optou por usar o saldo do cliente
-    const usarCash  = document.getElementById('usar-cashback').checked;
-    const saldoDisp = clienteAtual ? (clienteAtual.saldo_cashback || 0) : 0;
-    // Desconto não pode ultrapassar o subtotal
-    const desconto  = usarCash ? Math.min(saldoDisp, subtotal) : 0;
-    const total     = subtotal - desconto;
-
-    // Atualiza os elementos de exibição
-    document.getElementById('res-subtotal').textContent       = formatarMoeda(subtotal);
-    document.getElementById('res-total').textContent          = formatarMoeda(total);
-    document.getElementById('res-cashback-gerado').textContent = formatarMoeda(cashbackGerado);
-
-    // Exibe/oculta linha de desconto
-    const linhaDesc = document.getElementById('res-linha-cashback');
-    if (usarCash && desconto > 0) {
-      linhaDesc.style.display = 'flex';
-      document.getElementById('res-desconto').textContent = '- ' + formatarMoeda(desconto);
-    } else {
-      linhaDesc.style.display = 'none';
-    }
-  }
-
-  // Recalcula o resumo quando o toggle de cashback muda
-  document.getElementById('usar-cashback').addEventListener('change', calcularResumo);
-
-  // ============================================================
-  // MÓDULO: CLIENTES
-  // ============================================================
-
-  /**
-   * Salva um novo cliente no Firestore.
-   * Coleção: "clientes" → { nome, telefone, saldo_cashback: 0 }
-   */
-  async function salvarCliente() {
-    const nome = document.getElementById('input-nome-cliente').value.trim();
-    const tel  = document.getElementById('input-tel-novo-cliente').value.trim();
-
-    if (!nome) { mostrarToast('Informe o nome do cliente', 'erro'); return; }
-    if (!tel)  { mostrarToast('Informe o telefone', 'erro'); return; }
-
-    // Verifica se telefone já existe
-    const q = query(collection(db, 'clientes'), where('telefone', '==', tel));
-    const snap = await getDocs(q);
-    if (!snap.empty) { mostrarToast('Telefone já cadastrado!', 'erro'); return; }
-
-    try {
-      await addDoc(collection(db, 'clientes'), {
-        nome,
-        telefone: tel,
-        saldo_cashback: 0
-      });
-      document.getElementById('input-nome-cliente').value = '';
-      document.getElementById('input-tel-novo-cliente').value = '';
-      mostrarToast(`${nome} cadastrado! ✅`, 'sucesso');
-    } catch (err) {
-      console.error('Erro ao salvar cliente:', err);
-      mostrarToast('Erro ao salvar.', 'erro');
-    }
-  }
-  window.salvarCliente = salvarCliente;
-
-  /**
-   * Busca um cliente pelo telefone no PDV e preenche o painel de cliente.
-   */
-  async function buscarClientePorTelefone() {
-    const tel = document.getElementById('input-tel-cliente').value.trim();
-    if (!tel) { mostrarToast('Informe o telefone', 'erro'); return; }
-
-    const q    = query(collection(db, 'clientes'), where('telefone', '==', tel));
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      mostrarToast('Cliente não encontrado. Cadastre-o na aba Clientes.', 'erro');
-      clienteAtual = null;
-      document.getElementById('info-cliente').style.display = 'none';
-      calcularResumo();
-      return;
-    }
-
-    // Pega o primeiro resultado
-    const docCliente = snap.docs[0];
-    clienteAtual = { id: docCliente.id, ...docCliente.data() };
-
-    // Preenche o painel de exibição
-    document.getElementById('cliente-nome-exibido').textContent   = clienteAtual.nome;
-    document.getElementById('cliente-saldo-exibido').textContent  = formatarMoeda(clienteAtual.saldo_cashback || 0);
-    document.getElementById('info-cliente').style.display         = 'block';
-    document.getElementById('usar-cashback').checked              = false;
-
-    mostrarToast(`Olá, ${clienteAtual.nome}! 👋`, 'sucesso');
-    calcularResumo();
-  }
-  window.buscarClientePorTelefone = buscarClientePorTelefone;
-
-  /**
-   * Consulta o painel de saldo + histórico de um cliente (tela Clientes).
-   */
-  async function consultarCliente() {
-    const tel    = document.getElementById('input-tel-consulta').value.trim();
-    const painel = document.getElementById('painel-consulta-cliente');
-
-    if (!tel) { mostrarToast('Informe o telefone', 'erro'); return; }
-
-    const q    = query(collection(db, 'clientes'), where('telefone', '==', tel));
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      painel.style.display = 'block';
-      painel.innerHTML = '<p style="color:var(--cor-texto-suave);font-size:0.9rem;">Cliente não encontrado.</p>';
-      return;
-    }
-
-    const docCliente = snap.docs[0];
-    const cliente    = { id: docCliente.id, ...docCliente.data() };
-
-    // Busca histórico de vendas do cliente (últimas 10)
-    const qVendas  = query(
-      collection(db, 'vendas'),
-      where('cliente_id', '==', cliente.id),
-      orderBy('data_hora', 'desc')
-    );
-    const snapVendas = await getDocs(qVendas);
-
-    // Monta o HTML do histórico
-    let historicoHTML = '<div class="divisor"></div><div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;">Histórico de Compras</div>';
-    if (snapVendas.empty) {
-      historicoHTML += '<p style="color:var(--cor-texto-suave);font-size:0.85rem;">Nenhuma compra registrada ainda.</p>';
-    } else {
-      historicoHTML += snapVendas.docs.slice(0, 10).map(v => {
-        const venda = v.data();
-        return `
-          <div class="historico-item">
-            <div class="historico-data">${formatarData(venda.data_hora)}</div>
-            <div class="historico-valores">
-              <span>Pago: <strong>${formatarMoeda(venda.total_pago || 0)}</strong></span>
-              <span style="color:var(--cor-secundaria);">+${formatarMoeda(venda.cashback_gerado || 0)} CB</span>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    painel.style.display = 'block';
-    painel.innerHTML = `
-      <div class="cliente-info-card" style="margin-bottom:10px;">
-        <div>
-          <div class="cliente-info-nome">${cliente.nome}</div>
-          <div style="font-size:0.75rem;color:var(--cor-texto-suave);">${cliente.telefone}</div>
-        </div>
-        <div>
-          <div class="cliente-info-saldo">${formatarMoeda(cliente.saldo_cashback || 0)}</div>
-          <div style="font-size:0.68rem;color:var(--cor-texto-suave);text-align:right;">saldo cashback</div>
-        </div>
+    <!-- 4 vs MÉDIA -->
+    <section class="slide" data-name="Desempenho vs. Média da Rede" id="s4">
+      <div class="section-title"><span class="ic">🎯</span> Desempenho de cada loja vs. média da rede</div>
+      <div class="card accent avg-head" id="avgHead"></div>
+      <div class="avg-cols">
+        <div class="card accent g avg-col" id="avgUp"></div>
+        <div class="card accent r avg-col" id="avgDown"></div>
       </div>
-      ${historicoHTML}`;
+    </section>
+
+    <!-- 5 COMPARATIVO -->
+    <section class="slide" data-name="Comparativo de Períodos" id="s5">
+      <div class="section-title"><span class="ic">⚖</span> Comparativo: período atual vs. anterior</div>
+      <div class="card accent cmp" id="cmpCard"></div>
+      <div class="movers-row">
+        <div class="card accent g movers" id="moversUp"></div>
+        <div class="card accent r movers" id="moversDown"></div>
+      </div>
+    </section>
+
+    <!-- 6 PROJEÇÃO POR LOJA -->
+    <section class="slide" data-name="Projeção por Loja" id="s6">
+      <div class="section-title"><span class="ic">🔮</span> Projeção de faturamento do mês — por loja</div>
+      <div class="card accent y proj-head" id="projHead"></div>
+      <div class="card accent proj-wrap">
+        <div class="rank-scroll autoscroll" id="projScroll"><div class="proj-list" id="projList"></div></div>
+        <div class="scroll-hint"><span style="display:inline-block;width:1.2vmin;height:1.2vmin;background:var(--brand);border-radius:2px"></span> realizado &nbsp; <span style="display:inline-block;width:1.2vmin;height:1.2vmin;background:var(--gold);border-radius:2px"></span> projeção</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="ticker">
+    <div class="tag"><div class="b">REDE LANLAN</div><div class="p" id="tickerPeriod">—</div></div>
+    <div class="tape" id="tape"></div>
+  </div>
+</div>
+
+<div id="dots"></div>
+<div id="flash">✓ Dados atualizados</div>
+<div id="paused-badge">⏸ Pausado</div>
+<div id="err"></div>
+
+<div id="cfg">
+  <div class="cfg-box">
+    <h2>⚙ Configurações do Painel</h2>
+    <div class="desc">Ajuste o painel sem mexer no código. As mudanças ficam salvas neste navegador.</div>
+    <div class="field"><label>Meta de faturamento do mês (rede)</label><input type="number" id="cfgMeta" step="1000"><div class="hint">Usada na projeção e no medidor de meta.</div></div>
+    <div class="field"><label>Período analisado dos KPIs</label><br>
+      <div class="seg" id="cfgPeriodo">
+        <button data-p="7">7 dias</button><button data-p="30">30 dias</button><button data-p="90">90 dias</button><button data-p="9999">Tudo</button>
+      </div>
+      <div class="hint">Define a janela de todos os indicadores. Aparece no rodapé.</div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Trocar de slide a cada (s)</label><input type="number" id="cfgRot" min="10"><div class="hint">O scroll do ranking também leva esse tempo.</div></div>
+      <div class="field"><label>Buscar dados a cada (s)</label><input type="number" id="cfgRefresh" min="15"></div>
+    </div>
+    <div class="field"><label>Link do CSV (Google Sheets publicado)</label><input type="text" id="cfgUrl"><div class="hint">Arquivo › Compartilhar › Publicar na web › CSV.</div></div>
+    <div class="field"><label>Slides visíveis</label><div class="checks" id="cfgSlides"></div></div>
+    <div class="field"><label>Tema</label><br><div class="seg" id="cfgTheme"><button data-t="light" class="on">☀ Claro</button><button data-t="dark">🌙 Escuro</button></div></div>
+    <div class="cfg-actions"><button class="btn ghost" id="cfgReset">Restaurar padrão</button><button class="btn ghost" id="cfgClose">Cancelar</button><button class="btn primary" id="cfgSave">Salvar e aplicar</button></div>
+  </div>
+</div>
+
+<script>
+const LOGO="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAAAXNSR0IArs4c6QAAIABJREFUeF7tnQl4lNXVx393kpDMBBT3KhWL+9ZPv7pWrdLaqiiQBMW6fm5Y61Jbi7u24r5XRaGKW60LKkomQcVa22K1Ku7WfW9dsFZEFPKGQDL3e04mkckw7zrvzLwzc8/z+NSae8899//e/9zt3HMURiKPgB7buBax1I/QsYYBxiq9M/BjYL2Anfg38Cha/WOg3tQSUrG/qvaOzwLqNdWKhIAqUjumGRcE9Oj4MGpTaYKq2ha0vjxSoCl1Crq7tdem7tgS9UDnJ5Gyr0qNMQQu4YfXTYkLiHF4rwmaNYBBJTTHT9NLUXzeWyHFH1SbdbafyqZseAgYAoeHpaMmPS5xDCm9G6gEMAaIFanpYjWTAmaBtoipx9RM64ZiNVzN7RgCF+jr6+bGPdB6QxRnAN8uUDNRV/sxmotR6l2V7Hgk6saWo32GwCF9NT1+pVXpTq2D7jkV1KEhqa0wNfp2VM1l1MbmqRlfL6iwzpWkO4bAecKuR1HPoMQbKNYEGvNUVy3VO4DP6LI2V7PpqpZOF6KfhsABUNWH08DCxHRgG2DdACpMleUIfAQ8T5d1gCGz/2FhCOwRMz2WIdTEjyalLkVR67GaKeYHAU03MX0atZ3T1AwW+6larWUNgV2+vG5ObAP6SlC7VesgKU2/9WOgJqqk9Xxp2i+PVg2Bbb6THt0wnNrYG4Bc+xgpHQIWMb2Jmtn5celMiG7LhsBZ30Y3J24FdgA2i+5nq0rL5Md0rkpaR1Rl7206bQjcB4xuSpyF4lygxgyQSCPQg+Yc1WZdGGkri2RcVRNYj6SBVRq2RcfmGOIWacSF10wPKjWSJUuerebT66olsB4T35Ea9aQ8HQhvTBlNJUBA06N3UrM6ny5B2yVvsuoGrxbCNiWeRLFjydE3BoSHgOZp2qydlDwLqSKpGgLr5voNULUnovWJVfR9q6+rSk1Gd09Wya73qqHzVUFg3ZTYG8WD1fBBTR/7TyXZR7VZD1U6HhVN4N4HBsu63wFWrfQPafqXE4EF1NVuVMkPJyqWwLopfidKHWQGtkEAre9SbZ0HVyISFUdgPTYxlhjnAN+rxA9m+hQYgRdIca5qt9oDa4hgxYohsN6DRhriY4gpeSVkxCCQG4GUPhDd2a5mYVUCRBVBYD2eOMsSFfFBKmFQlUUf6qyEmkFnWdjqYGTZE1g3JyT20jhg9XL/GMb+oiIwH8V9qtU6tqithtxY2RJYTyLGS4lrgeNCxsSoqy4EprK19Qs1CQnKV3ZSlgTWYwZvQU1K/JfNrFt2Qy6SBs+nJzZSzVr8WiStq6QltB4zZHVqetIxiY0YBMJEoKdmDTVr0fwwVRZaV1nNwLolcRuwP5qBKUYKjZLRXx0IKJYA96pW67By6XDZEFg3J2YBo8sFWGNnWSPwgEpaEnw/8hJ5Ave+HmpuvAf0+MijaQysIATUDJIdP43666ZIE1g3Dx0KSx/uC3FTQYPDdKVMEJhLXf2easaXX0XV3sgSWI9rWJ9U7DlglaiCZ+yqAgQUC1Cp7dTMJe9HsbeRJLAe27gXMf2ACXMTxSFTlTb1kFKjVXuHrAYjJZEjcG9SMPSfIoWSMcYg0IuA2jNqSdoiRWA9tn4TYjVvmtFiEIgsAqmeTVV711tRsS8yBO4j7+sVmDc3Kt/a2BEOAilSPZtHhcSRILBZNoczsoyWYiIQjeV0yQncd2A1u5jQm7YMAqEgkFKjSn2wVVIC67H1G6Jq3kaZ2MyhDCijpLgIaDS6Z2PV3vVucRte3lrJCNznpPEBMLRUnTftGgRCQGAhDBqhkgsXhqDLt4qSEDjtHpmQSPrb+7bYVDAIRA+BZ0haO5bC7bI0BG5uvNf4NkdvFBqL8kFAzVDJjv3z0RCkbtEJbF4VBflMpk6ZIFD0V0xFJXBf/KqflcnHMGYaBPwjoLlRtVlFG+NFI3BvJI3ano/MY3z/Y8LUKCMEJChAd826xYrsURQC98WwerWMPoMx1SCQHwI9sS2LEWOr4ATujR75cuJDNMPyQ8TUNgiUFQIfk7SGF/pkuvAEbk5MMaFfy2rgGWPDQ2CqSlrHh6duRU0FJbBuSlyHoqAdKCQ4RrdBIG8ENFNUm3VC3npsFBSMwH3pTj40sZsL9emM3jJBYD511vBCpXEpCIH1eAazLLGoTAA2ZhoECo9AnTVEzWBx2A0VhsBj4weYLIFhfyqjr6wRSOkDVXvn3WH3IXQC63Hx/UipGWEbavQZBMoeAaX3V62doXIjfAI3J543ybXLfqiZDhQGgRdU0tomTNWhElg3x+8CdWCYBhpdBoGKQkDrO1Vb5yFh9Sk0Aut9Vl6FumULwjLM6DEIVCwCy+pWVQ9+9WUY/QuPwM0Jyeq2WhhGGR0GgQpHYL5KWmuE0cdQCKybE6OAh8IwyOgwCFQJAnurpJV3LLi8CaybG74DMQmNY8QgYBDwhUBqhEou+ZevKlmF8ydwS+M1aH1iPkaYugaBqkRAqcmqteOX+fQ9fwI3J3Q+Bpi6BoFqRkAlrbw4mFdl3Zx4Evh+NX8A03eDQJ4IPKWS1k5BdQQmsG6K74BSElnSiEHAIJAXAnoHlex8JoiKQATWo6inPtEp6dqCNGrqGAQMAgMQ0HRZcTWbLr+4BCKgbmnYBR173G9jprxBwCBgg4BK/UC1LnnCLz7BCNyc6DbJt/1CbcobBBwR6FFJq9YvRr4JrJsSZ6G4wG9DprxBwCDggoDmbNVmXegHJ/8ENrOvH3xNWYOAdwQUy1SrNch7BZ+HUHps4iZiHOWnAVPWIGAQ8IFAiptVuzXBaw1fM7BuTrwObOZVuSlnEDAI+EbgDZW0NvdayzOB9biG9UjF8vLb9GqUKWcQqGoEtB6u2jo/8oKBdwI3JzqAhBelpoxBwCCQFwKWSlqNXjR4IrBuTkgYkOe8KDRlDAIGgVAQ2FYlLQlP5SheCSxOG7u4KTN/NwgYBMJCQD+mkp0j3bS5EliPYiXqE1+5KTJ/NwgYBEJGoMtaWc3mayet7gRuif8ara4M2TSjziBgEHBDQOmJqrXzd/kRuDmRMo8W3JA2fzcIFAQBV/dKxxk48ilSYsCaKfiP/IsRg0AFIpCyVlLt2KYpciZwc6IVaI4sLDXAvkvhXl/eZ5HtjjHMIJADgaRKWi12yLgR+BNgncjCKgS+0IKL4vC163Y+st0whhkEHBCYp5LWMN8E1iNpYGjvo/3oSj+BZ9fBY3XRtdNYZhDIB4GFVlzNYUkuFbbTlm5OiNvkevm0W/C6/QT+SsHF8YI3ZxowCJQIgX+rpPUdzwTWLUNWQ/dIcu5ou07Wazi3b5FwSRwWmmV0iQaYabawCFiomuGqddEX2c3kHPG6ZfCW6NQrhbUpBO07d8OYpWlFb9bAH+pDUGpUGAQiiICKfVe1Ln7VI4Ebp6P1ARHsxkCTzregf+v7UQymNETeZGOgQSAYAuoelexYgZO5Z+ByCdZ+iTUQi9OjveIP9uFMLYNAGoFcQeBXILBuatwTpR8uC9CyCfxwHcwxp9Fl8e2MkQEQUHuqZMcjmRVzEDhxHIopAbQXt8oQDWdl3XLJQfskMwsX90OY1oqGgOZ41WZNdSZwS+I9NOsXzaigDW3QA0dnxcGW/ysENtmagqJq6kUaAf2uSnZu5Ezgctn/btgDE7IILMS9qgH+a3yjIz0OjXGBEcjeBw9YQuvmhEScvCmw9mJW/MUSGCYPpbLkmgb41BC4mJ/CtFVUBCaopHVzf4tZBI7fBerAopoTtLHsA6x+PYbAQRE19coCAT1dJTsPyk3gpkQbirGR78dWPXCgTR6oyQ0wz8zAkf+GxsCgCLSppPXNC8HsJXQPEP3R/+NlIP/kkmn18L44SRsxCFQkAimVtL4Z4NkELo/z29M7YaiNqfcPgmd954iqyC9tOlWZCGQeZH1DYN0SvwStTot8lwdrONvhleOd9fCKmYEj/x2NgcERUPpS1dp5uijIIHDiYzS2D4eDtxZuTX30EtQGOU6f+5uZWg8f2hC4dhAM23i5QR++Bro8Fh3holgEbettsXx4Lf4SvpDYEEZCQUDxiWq1vl2WBObkTljdgXR2p9A77wvHTYHEkOUYfv0FnLA1LFoQCq5GSR8C096ENdZdDkf3Mnj/RTjthwaiMBDIJrAeHR9GrXofiH5wKbvro35g7E6h710AdTmeG8rscGjvj5mRMBD46ZlwwFm5NR0xAhb+N4xWql3HUrr1+uqBzk96l9C6uX4DqHk38qhcYIHb+VSuGVhm3p8cbt+985rgxUej3f2mE2HBp/D4jGjb2brYOQpxi6eUP6Xr46hj0j/0Lz8K/5ZknFGVng1Vsuu98iGwLJsndrpnNM5F4JmLQTlE67jsYHgqGc0vtccRcOx139im33oGdXpEl6LXvgDf3sQZx6gSeOhacE4SvvM/y+2X7dUn70RzXDCAwI0TQV8RUUvTZu26DPa2ufvtN1x8O85NQOYZ19VzYb0tnbt2yg/g3Rei1/19joUJOT5LFEkwZDW4+Z3c25R+ZGUvPH5o9HAWi864B7YfPdC2F/8M5xUoqrJMKL1HOUEPUdVJKtlxdd8MnAiqpTgfYzUNp3gIkCkEPifjOWFNLfz+FVhjuL2dcgo9bnBx+uG3FbH9Wzkehn38Fvzie/baagZBT1+oIb9tBi2/6tpws8su7LDhIAeHUZP/Ox9afr2iVW5jI9Z325ES/yeP8t2RcPZ9cNH+6QqrfAtGHgg3nwIfvelRSbqY3AeXB4GP7IKNPYD01zp4JONB/8prwB9ccpLne7AiEO5xFKy0WnrvF4uBTqWvp5JXwzIbl0+3T7X7oXDC9blLdVlwwBrpv0l7+54CMpiyD4+e/xP86WZ49kG31vL/e6ukj3aQT95O/+jkc203eCjIHlVwlpGrYpBKwVtz4Z9/C96H61+FtUbkrp+52ll3U/h+M+z9c5CxlSmtv4M7JoETmb+3B6y+LjzS9xahdxbW6e3d9a/Br7aHTjlD8CblQeBvpeBXOUPirtjL7JA6t34AQ9e0R8P6Go7eGCzbzBX2dbfYJT2Ydh7njLZcnbz9jLcvklnqiidgg//NXW9pJxy0Nux5FBwtS2yXaJxvPAXn7BP8x8TN+m9vCte6pLL9210w+Wg3TSv+Xe6T19kITrnD+Rzjpb/AReP993Hj7eFSB/JfuB98+R+QWfp/XM4ehLxyPvGODRZX/ANO3jndR9H35lwYcwL8Zi+oqYGWiXDfZZ4x6iWwHh8fxjL1sedaxS54Ries7GGFLw8Y5AppwK+i26zwFpzgsBTN1VdZlt+30J00mXV/vgV85rISyG7LbUbz+x3cloN+9WWWlx+xk2931hBk337np5BYybtln38IP9vMe3kpKd+yxiEMU/8M6UfrURumbwwyRWbZwy6EP5yZ/q87NsHcdjhvdprAIuc9BL/d23tLMb2u0i2NB6P1Hd5rFa+kPrIL5WXpLCa9UQO3Zdzzbr8PnHGvs7F+ls9Koa/4B2r9rfwDsKQDDnRYCWRrvPIfsP7W/ttxq+G2d3arb/d3pyWo1Jn7AFzyU+/ad/8/OOg3sGqArD5CYCGyF5GVw+TnnGd2L3pylREivvLY8r/U1sHBk+C2vjvyQ86F+GCQ1dET96XLXfAnOHtP7y2m1CFKNzUegdK3eK9VpJKb9sDhPvaP2ctnORj4pUNsgvdfgol9yxm3Lsl+9GdXw6CAYWtlTzwuwwPMqT3Z193zBdQVyKfmvRfh5F3ceuzv726rhTvOgfs9XnKcPh12yONFqx8Cb7IDXPJXf331U1qW38/NXl7jyEvhlr7nBj86BP56B1zwMJzdNwMLwe+c5L0FrY6MJoHlpZG8OPIqj9aB/JMp93+dPtixkz/fClNPcG5BDoi22h1+m+cdsZ8l9EbbwmUZv9xeMfBTTmbiE7fJ70Cpv72xJ8IRFzu37mX53DgU/vih8zdz66N4eR2zGSz1eGYiB0dr5cxY4taSt7/L8vukHeDfr6XL//SMtMPQ28+CrOTefxm2+AG89jj6/IdRs6fBkzO96ZZSkSSwcE48rvxkSTkjK5CdzGIzXQ6mTt0N3nnOHiwh/7GT4ccOHlxeoZYZ+MC1QE6P3WTj7eDSOW6l8v/70ZvA/BCOPo7+HewtJ8M28uVncKRLjMSGBEz/PP8+iQb5YZr3LvR0u+tzWzm4a3AvIafvYpOclovc/TlM2Cg9FuReXFZ1t7wH54+DN59215dZIpIE9npl1N+R+wbBc1n+lftOhEPOcwBDQ4vL3e8vbgBZ5jiJ/MKeumvfTCbXAX2xEGQp9D8jV5xN7joPZlzqrPP3r8K3bK40/H1e99KydHvtcfdyTiXc7L3qSPj7PfYaGhpBdDjdFkjt1/8Bt5yevqKTAyH5p2EwnDYd5HopU+TAUK6snK7wtvohTHogv757rS0z7cSd0qVlazR8i/S9s1xdtV6ZPuCUrY1f6SVwS+J6NA4/oX61Bi+vf7IMtbuLt1WmevlRk9zAi7Om6wmXwz7H2Rvy8I1ww6/s/z76ODjqcueO/O1OmPwz+zJTX4G1c8w8bvvBYswK/Vb/999wzObBP5jUdLP3xG3hozfs27jhNVjTYRnbvRTO+DG8a3M1s8t+MPG2FfVLm9K2nTSfBIddkF/f/dS+9EB4ut1PDfeyiuuFwNGIA71jNzT79B46Ow7dOdba57TD1rvbA3D1BHhseu6/b7MXnH2/fV2ZdX+5nfOgdBrYSxbDhE2gQ66iskS8cmQ5FUTkxFPutWWGkuW/7N3rPaRcfeYBuNjHCXGmbeIlJt5iTmK3/40PSTvZOB0MPtUGVx4GPQ4/6te9OPCNd6YtH/wTfv393NaNPw0O+q1/pOUH5flHQPekV1yygtjqR970yLj5MMQHEor3lY5CHOiVNJzp49BK4Hq9Bv5ok43QbVY4dkv4zwcrgi53vLd/kj7ezyUykPbz4Msry6R7v7T/qEdukHYOyBYvB0K5tMqe7/gc11tymu3l5PyQYbl/UNyG5VVPDXT+zy4vfZS+5pItfwDnO2TwmTsLLvGQX++6l2DYgFjny1uThwjyICGX3P4xDF7FrYcD/y7kHZ+jjjiCyOFj/xbKTusTM+DKEM5UMvRHg8BCXiGxVxGvyrNsUqjI3kheHzmJ3aywzZ5wtsMpoCw3ZdnpJuc+mN4D24kdgZt+CYdf5KZ94N9fmQO/3Sd3HfFPvvHttLulk3QugsPW8+/FdNVc+I7DQxGngzKnH9nZN8C0HL7J2X2Q4Aw3vjMwSENmGScCu/3I58Lr6E1h/ke5kTziEhj7C/dv9/d74aoj3Mt5LFF6AtsFaHfqwHUN8LHNoPzVTbCbQ2hrpxcmTh/1lF3t92HZtk5+HsRv1i+B9zslfdnvVby87pEQQrLMdJNHboHfexiA/XpkZr/xLVhpdXvNdgQefTwcZeMy+MAUuPlUN2vTf3fzdQ+TwLeeDu3XOtvlNvak9lfz4agNvJ2Se0ChtATeuhsO8LnvnVsLrQ5ODr97CkZkvOnMBsHuon+fn8OEK3NDduF4eO4hD3DKKWN9+lR1NRsvomVL09cIX89fUZ/XJW9/zVtOhVke8tB52auKzmO/C/+RwCwepHFluGOefcHeAzKJi5VjZXXNszDc5vDMj3ec/EjKj6Wd2Hme/fBgOHGah05mFPFyly3Fp3+WPh13kk/fg+McxqgPy0pH4OEpOM7jhXt/h75ScLHDwYzsQcSpPjNwXSYYcsAjBM51/ymn1nJ6nUu8fjypK6+SbnNw5XP6eH6XdX7ssnuaOKC/Hq7X+suvsjbc4vB8UK5GxIEll9j184A1ocvFfz1Dn777c1S9QzZK8bQTj7tsOfM+2G6Ud5r4eS8ujiFyA+G2bZk0Bl7O3wusNASu13Cuz0OrLxRcEXd+/ywnm+IAbxd9Q4grBBYiZ4vsPWUPmi3yJO8ClxdHmXWKRGD97gsoGVhexc2ufj1elopSVsgrJLYTOVSTw7VssTujkNP9/VZ2fo6XrcvtB+/gtdMn89ly1n2wrQ8C/3on+OBlj0ir9LvoVb/lXF4eO8ijhzylNAT++RL4jkNo2Fyd8pJxQQ417sxxutuvz+neU640st94Sr3jtoJPvYcL0+c+iHI6wJKngBM2XjESppfDt0xcTv4BvOczisikWe5XHv96BU7a0X1YuZHHbnUgLoRXPrmiftkbyvI5149rLmvcls9Sx87f3Q+B/T5EkXZlGyVBFN1E/AjEnyAPKT6B91sK23pwc8vs1B318KqHYO1yCiingTaizx+HeuFPuf96yd9gk+1X/JufqJVeP9zMK+H2rDtIr3XFQrnOkF9vv9EtvO79Lt4fnnEIAiDLVnEJtBOnbYJT5I59V/I+A8vD+lNdBr94YsmJv3zDTPFD4AempqNl+JXzZ8OWuzrXCsGRprgE9vtIQbrvZebtg0nPXIRyuotz2jPKw2p5LZJL5Cmg/BK7ibheigumF8l2JpEAAfKczIt48S+20+MW5EDquR2yyPJTSGAnTl5qTisNcTMVd1M36fV1l6WxB4d5WZpL9BJZ+fTLb1pBomO4io8zgWxde06An1/j2gKP3Q1XS1bfYFI8AjdqkMf5bmFhM/txRQPM95FrzWlZ5zYo7QLIiT2v/h1+42HPZBd7Ote3EY+sA2Wf1HdKK8HrxAYvYre381J3r6PhmKvdS8o71TN/nLvcdvvAmQ5vrf/yR7jOoS9OL8VO/1E6RI6THHwO7Ofxqkn0ZC9VL5sDG23njoF4t/l5YJ+tccYCqLVxNuovK6uE/Vd1t8WmRPEI7PeRgt8kZYPicE+Oq5n+js+ZDtdMsAfKbVl4+SHwZGvu+jKrXCsufTYeQXatznsHju/zFJLgAxKEwE3kyZzsFfMRt/1rv255ECBXMdki0RsliqOdyGGU02ugMcfDkTb3wBId9Kyf2D8JPPQ8GDfRf+8zSXzXZ/bedpmaZRsh24mgIq+05LWWm8hjD3n0EUCKQ2DxcRZfZ6/yUi3c7fNBu+w3ZN9hJ3PugmtcYjKd/EeQFCx28vLf4KlWkLfEsnyToAHyjtVu6e2lv1/MA3HtPOV2kJnNTeQ9qQSiz0fkDlbuYt1EHBfkVDpb5L5c7s1ziZfQPW7ty0GWeGL95Tbo7obhm8FmO6VD0ojvcVC54lD4x0z3Bxj9+v1c09nZ5OXHUjCTM41c7rUufS08gVfRcJqPK6PPY3BlgMgX2+4FZzk8Qjh3LEjgMycRh4cpL+X3qDzI4JIP+Orj8F2XQw/Rfdae8PoTQVpZXkeu2+Sqw87nO1O7uFhmO53IAZbd/auT/3Om3qCPCfLrOZw20tt76xAOmHpN3XAbuPzv7lZPPR7+/Af3clklCk/g8y1wiBk2wB7ZDp6dAA8RZFfoqRuBJfazl5Cm8hZXPKkiKXkcqmT3x0sWBamT6w2zU6aL609Mh7J1E3k4csenII/5oyhuzz692jxkVbjpbZAtnpt4HaMZegr7nPCQLtjSIxvFy+qyeDDySofcTkb9LIcufxw29BmtMvvj9L94OuoKGO3xcMrtA995rq+wo27qXN/y9ivIxs5pWTjlOHg0x/vcXMZsuiNc7LIqcuvEtJPSM9cqa4FkRQxLDlkHOr4KR5vXQzO/37fvOaHcezi8TA/Yh2+n4ASPrpL/icHVAZbNmaaFSWDRe+EjsLnHoHeZdsh1hbxa6s/CJz7D096AxMoBgeyvFuLs26/y9LthhzHudmXnjgqLwNKyJJ2T5HNB5N6LYXrGo3w5XZdT9nxFgj1I0IcwxS0/l7Rl9yzUzo7eB/2FiErZoGGSx32vvGW4KAEeuW6LqSOBAw7+616AYS7JujINkiW6uBDKlVW2SMA2yR8UVHy58/loxMshy9/ugMkZQVvCJLCYKg4mJ/ze39mD3bXgmTNgOx+xlbOhkgf38vA+bJFrN7dDSi8HgAPGW6GiUm7WA4d5DAl77yB4wc/lsA2yTgSWgGL7egzrmqm+N+JCIu2e6ZTdUOoI+BK8zS7/ba088l/gridX9w5dBxaHtJzL1u8aP4z0I3bx/uoXJwLL/a/cA/uV+jj6jnkowclN5OnjTSfbv18+6RbYNUCUEYngIQ8gvLpzutmZ+XcvnnZ+s1cULKidWxLu/o7dMwheDIG8ok9+deXXN6cEnIEzdck1xgonrzpNXHH08BIFUQbnbgekZxs7ObcpnWZj31Ph/svh68/tU3X4GUB2ZSUelcSlspNcs0LYM3Bm2xJWKGc2SZ0OR5Od8cDO7jXWBQk4IFuYXCLhWx/9I4zYCmIK3n0RXipwjujjroOfODzml9xK8s29SkEIvPdS2NXDne9/Y3BVQ/DsitmddPPz9XOI5RXAfMrJJb+85pGrnI23hVf+nr5KkoADxZbjp9iHz73rfJiR6V+uoDeJt43IoZLEN46KSMABcRyR1ZS8E//iE/jqc5ADo2KLZNuQrBu5RH4oxRfcz+yfjkoZcmoVL7OvRJG8wMOxuh+Axe9U/E/txM0Ty09blVZW0n7I4/zsFUaul0kSME9cIZ3koLV8ZdmrNDgd+yMklsR12VuyX0kAeJ/Xl0pSq4xuGE5tzEOgJw8w77YMRnkICyspQCUVaJgy9Z+wtk0Atf52AtyzhWlipHXJgLp/0fKBZXegIg/WJaOBk/jdy0UamPCN05PaURI1NN9xqfXwcPMDH78E1nV55/tYHcwOmbwChFsqFSmzbEl6mVqorOvhf+sia1Sw3ubpvaad04vXwHvyGEJiIcty1ciKCKy9IXR+bX/o6QGzcPMDy1mUpERxkwvjsMjDMzA3Pdl/93LP1l9HTlQlIfNLf01H/M9bFMhprnjbTD8/b22RVuD3MYEEM5fXRZLsPAzZZg/YeAf4+E143O7QMoyGoq8jXAKv3wM/c7g6kon58jh8WQDyCtZ+CJz9bSSs6pTjV3z4nesb9qf0OPxCWHO9FWMBL1qQDtFkhaogAAAPxUlEQVTq5zAi+mNluYXyoKDZIauFU19kVpeMfI+7pH39RoeCnVvgR4eCuF5miwRtl6ufKpUMAjf+CvRVeeFwsUtCMiHupSEfXGUa7MUhIa8O+qgsyaw+CtGtz0fTBS+aD4FDNk4v/C8q36eVIdtUPHXqJJXsuLpvD1y/AdR4D/yUy0qn02d5pCAZBAsphsCFRHe5brvgf8VpfWArsr8+vIDpQUvRJ89t9myokl3vhUPg9SVcq4MvpGQPlCyChZSoEFgibUgE/+w4TIXsezF1R4nAhfBZLiaWebWVSeDR8WHUKonoHYxlG/XAUQ7739MLPPsKEKUmsMTM+uec/CI45PVBi1Q5CgSW+9LH7kkfRFanLCXFCNVuzfvmREm3JD5GMywQHpv0wBE2BG4fBE+G5C7pZFwpCCypTSRRs8RNyhVAPBCYEa9UKgLL0z6J8XyMxPX2kUcr4nAGMk/xiWq1vi11wyGw0/2vhMaREDmFlhlfghdH+DDskKTY4kxvLfKW7CyMNqOiY48j4ViXHEFh2Son+RKLbN578OFrhrj9uOYmcPwStDotEPZOJ9DFWD6L0XKlc/2r7ike/XSw99rj9uWzq8TE+uRtPxoqs6wEahNf7tBEp2Nc33dZ+lGI/PsTDmFrQ2u3TBUpfalq7ewNVjbgUjZwrmA7AssLtN8WYf+b+R0kJ41ELZQXLW75WjPrya9952K45yJYMM/br/2aGv5boHvtchhba42AQ87190RSfhTlLl0Si8uLINmGGPGFgNz/Lp+MM6rq5oTEv/ERiLmvsh2Bn6+BGS5xcX2ZHrHCkpxtap6RRCLWJWNO5BFIqaT1TZqSgTNwU6INxVjfXbAj8K318JaHlCi+G4xAhf6gBcXaIkSgy8aECCCgaVdt1jdxhbOW0PG7QDlkx7bpgGRcWDlXHtgG+NT/hB4BmNxNkFdX8vrKENgdK1MiRAT0dJXsPMhuCS1JWm7y3dp23bBvjkTdkxtgXoUSuH/VcVEcvq7ifbDvwWIq5InABJW0vonbu8LIC3SQZefI0ToI5hbhCilPRHxXz0yPWun7fN/gmAqFRCDzAEvayUXgDwB/DqYjUnBMDldKCZvzuwo75JEFxXnW8iRtnym4qoCPNAo5GozuMkNAv6uSnQMScK1I4KbEcSj8B+q1e8xQaXvEA7pg64xg9e/F4MYK+5Eqs2FdNeZqjldt1tTM/uYgcOOeKP2wX1B001LU93MEszsvDsuvrfyqjVb5XPmNb6uHNyr0pD1a6BtrtNpLtXUMSCKd8/Ql0D5YxvCkHHmQ2gbBUxWwD5al84U53jyfmQCXKEJm5BkEwkAge/+bcw8s/1E3N94N2n9k7Fw+0Qv6ch6F0YNS6rAL2FdpW4RSYmzatkdAqbtVa8cKV7y5Z+CWwVuiU6/4xlPuguVOOFvK/DRa774M9RMblz9DYN/DxFQIgICKfVe1Ll4h7qwNgYeshu6RULP+synnOswSZ45ryvSgZ5tu2G9pjvN64P0YTCvTfgUYQ6ZKyRDoQNWsp1oXfZFtga0Hgm5O/AtYz7fJ4tAhjh3Z8kEMbiizwf6/3fDTHA4q/X17uQamV7Cvt++PbyoUCIF/qaQ1IpduewKPpIGhCY8pBjNU26VWEU/LK+LwRZl4Le3cDWMcyCtdPitgMvICfWWjtkIRWGjF1Zzc+Tsd2aSbE58A6/iCxS0+9C318HbEr10O74JNXRKTFyPOly/gTeEKRWCeSlq2kXLcCNwKNPsGJtvZIVtBmFkJfRvnUGGXbthr6XIvKyfdN9TDBxH/IQoTG6OrVAgkVdJqsWvcmcBjGUIs4ZLJKofq76RA/IWdZKGCafWwIAKPHdZIwY+XwVYus25/f8zhVakGc/W1W2cNUTOwTQfpuiHVTYkUakWfaVck3QK9iwLZFz9UB48XIFeSq4F9Bc7shCESJcJjBbH5NwnwkEHVo0ZTzCBgh4BWSctxhnMdtrol/mu0utI3xnEN53g8AxNXS3l2ePsg6HI1ybcpK1TYdRls0QPrBXChklXD+2bpnP9HMBpcEVB6omrtdIyd68oWPYqVqE985dpYrgK7LwM7Bwg7hZ/F4JWadA6l50NywVxVw/e6oUGDnC679trGuIcGwd9DsikQoKZSVSHQZa2sZuO4hfU0lHVzfA6o3QKBZxetw6syWbIKkV/KmPXkv8k/qT7z5X9ifRFB+nu0kka3LEPVhRRD+J0Y3Fxm99heMTblIoiAfkwlO0e6GeaRwIltgOfclNn+/SIrSKi8wM2FXlHSoUpaVCMGgeIhsK1KWs+7NeeJwKJENyc6gGAxYlfXcLLH/bCbxcX++4N18HQdmOinxUa+mtuzVNLy5MbsncBN8XVR6sPAqA5LwdFd6X1ouUhU76vLBT9jZzAEtB6u2jo/8lLZM4H7ZuHXgc28KM5ZZpCGiUtyR7AMrLQAFeVE/PFaeNEcWBUAXaPSGYHXVdLawitI/gg8NnETMSRyZX5yjgVR3FLKrZK4P08KtlPIDxRT2yAgB7PcrNqtCV6x8EXg3lm4JbEUTf6eFxv0ZTSMyiT3lYKb6uHzCHiGef16plxlIaBYplotXyl+/RO4KXEWigtCQ26nvlc/vi0JyQLxqHpgEDwdlV+SkPpl1JQfApqzVJt1kR/DA9FGNydk2IfrjjR6KchptdsrID+9cyr7ag08W1u5qV/CwsnoKRYCPSpp+Z5FghG4pWEXdOzxgvVsTwkK0AMJHc79sextLYUkIFRTGkCWy0YMAlFCQKV+oFqXPOHXpEAjWY+invrex/6B6ns2chUNtRrEAUqeKIpLpFuLckslB1GP1sGbfYuEbpV2zTRiEIgmApouK65m0+XXvMCjWjfFd0Cpp/02aMobBAwC2QjoHVSy85kguAQmsDSmWxJPodkxSMOmjkHAINCLwFMqae0UFIv8CCwL2uZEgDd5Qc019QwCFYZA0oqp9NOcQJIXgdOzcOM1aH1ioNZNJYNANSOg1GTV2vHLfCDIn8BjGkZQE3s/HyNMXYNAdSKQGqGSSyR8c2DJm8C9s3BzYpQExwlshaloEKg+BPZWSWt2vt0OhcB9JP4cWD1fg0x9g0AVIDBfJa01wuhneATeZ+VVqFu2IAyjjA6DQEUjsKxuVfXgV1+G0cfQCNw7CzfF70Cpg8MwzOgwCFQkAlrfqdo6Dwmrb6ESuG8pLWFAvheWgUaPQaCCEHhBJS0JTxWahE/glvh4tLo3NAuNIoNApSCg9P6qtXNGmN0JncC9s/DY+AHE1PQwDTW6DAJljUBKH6jaO+8Ouw+FIfAeNJJI2KaDCLsTRp9BIPIIWNZg9QgSGDJUKQiBe2fh8cRZlpAgeOZqKdRPZpSVGQLzqbOGqxkUJCxrwQjcS+KmxHUoji8zwI25BoHwENBMUW3WCeEpHKipoATuJXFzYgpwXKE6YPQaBCKMwFSVtAo6gRWewJOI8VLiY2DtCANtTDMIhIuA4hO2soarSRT0tV7BCdw7C48ZvAU1qVfDRchoMwhEGIGe2JZq1uLXCm1hUQicJvGQ1ant+QjdGyDHiEGgMhFQLKG7Zl01a9H8YnSwaATuO9SahuLoYnTMtGEQKBEC01TSOqZYbReVwH2HWrOA0cXqoGnHIFBEBB5QSWtMEdtzjfFYEFt0c+O9vTfFRgwCFYOAmqGSHfsXuztFn4F7Z+F0LC2JaLl9sTts2jMIFACBuSSt7+cT2yqoTSUhcHopPXQoLP0AGBrUeFPPIBABBBbCoBEquXBhKWwpGYF7STy2fkNUzduo0izlSwG4abOCENBodM/Gqr3r3VL1qqQETpO4cS9iOu/YQKUC0LRbxQik1CjV3vFwKREoOYHTy+nGPUD/qZRAmLYNAv4QUHuqZMcj/uqEXzoSBO5bTm9CrOZ1wklnFj5SRqNBII1AilTP5qq9660oABIZAmeQ+M0oAGNsMAjkRCDVs2lUyCv2RYrAZjltSBNtBKKxbM7EKHIEzjjYetAsp6M9nKvIuhQptU+pD6xy4R1JAqdn4voNoOZZYJUqGiimq9FDYAGx1HZq5pJIpg+KLIHTJB46FL10NsqkMI3euK4CizRPM6h+LzXjy6+i2ttIE7gfNOM7HdXhU8l2lca32S+iZUHg9GycMK+Y/H5dUz4oAkV/VRTU0LIhcB+Jb0ZxkAkKEPRzm3qOCMhjfM2dKmlNKBekyorAvSSWyB41PZIJ0YhBIFwEemrWKFYkjbAMLzsCp0ncG2PrL8BaYQFh9FQ1Ap/RE9u9GDGswka5LAncS+J0tMtrTcjasIdE1embytbWLwodPbJQqJYtgZefUCduAMaZDBCFGiIVq1eCzs0sZvyqQiBZ9gTunY3TaVysQgBkdFYoAnVWolDpToqJWEUQuI/Eg+mKjzZZEYs5fMqwrZQ+EDofVO0sKkPrVzC5Ygj8zZK6Kd6CUmebJOOVMDxD7cMLKH2hau2cGarWEiurOAIvJ3LiFhRHlBhf03wUENDcqtqsI6NgStg2VCyBe5fV6cB5bwNrhA2c0VcWCHwOgzYuVcC5YiBU0QTOmI33RiHPE41UCwKafVSb9VCld7cqCNw7G49rWB9d80u0PrHSP2pV90+pyejuySrZ9V414FA1BP5mNk4HlX8K2KEaPnAV9bFkwdVLiXHVEfgbIo+J70iNejKKYYVKOSDKsG1Nj95JzeqUTB9VJ1VL4N5l9UgaWKVhW3RsDlBTdV+/vDvcg0qN5Mslz6k5LCnvrgS3vqoJnAmbbkqcieI8Q+Tgg6lINXvQ/Fa1WRcVqb1IN2MInPV5dHPi1r798WaR/nLVZ9wbwFyVtMzdfsa3NwS2IYIe17AeqZgEmk9UH1ci1WOLWGpzNXPJvyNlVUSMMQR2+RC6ObEN6CtB7RaRb1YlZujHQE1USev5KulwoG4aAnuETY9nMN3xn6HVZWaf7BE0/8V6UPpUejpvrJTHBv4h8FfDENgfXr2l+54v3gVsA6wbQIWpshyBj4DnqbMOqoTnfcX+sIbAeSKuR1HPoMQbKNYEGvNUVy3VO4DP6LI2V7PpqpZOF6KfhsAhoarHr7Qq3al10Po00IeEpLbC1OjbUTWXURubp2Z8vaDCOleS7hgCFwh23dL4E1J6I5Q+CdSGBWom4mr1O2h1NTH1jmrt+HPEjS1L8wyBi/TZdFPiGJTeDaVkmT0aTaxITRenGUUKeACtO0DNUUlrWnEaru5WDIFL+P11S/wSUOnltmZ1oL6E5vhpuguFBIUTw+9QrZ2n+6lsyoaHgCFweFjmpUmPTaxDrCee5kTtWJT+XV4Kw66s1a9R3e29alM1nardmhd2E0affwQMgf1jVvQaveRWeiTEBs7QKrUFxPYGHdDtU70BqYfQsdcGdirVhVZzDEmL/ql9N/j/gjqa97asSX8AAAAASUVORK5CYII=";
+document.getElementById('logo').src=LOGO;
+
+const DEFAULTS={
+  meta:2300000, periodoDias:30, rotSec:60, refreshSec:60,
+  csvUrl:"https://docs.google.com/spreadsheets/d/e/2PACX-1vTHnjTjV-yegAJ1HbjixoVlBlmmTtd-2OBg8ZjaiJwvEiz78eKVZm2TfnE4Zx5o2pttcpalef1cBXJk/pub?output=csv",
+  slides:{s1:true,s2:true,s3:true,s4:true,s5:true,s6:true}, theme:"light"
+};
+function loadCfg(){try{const s=JSON.parse(localStorage.getItem('lanlan_cfg'));if(s)return{...DEFAULTS,...s,slides:{...DEFAULTS.slides,...(s.slides||{})}};}catch(e){}return JSON.parse(JSON.stringify(DEFAULTS));}
+function saveCfg(){try{localStorage.setItem('lanlan_cfg',JSON.stringify(CFG));}catch(e){}}
+let CFG=loadCfg();
+document.documentElement.setAttribute('data-theme',CFG.theme);
+
+const fmtBRL=n=>"R$ "+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtBRLk=n=>{if(n>=1e6)return"R$ "+(n/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+" Mi";if(n>=1e3)return"R$ "+(n/1e3).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+" mil";return fmtBRL(n);};
+const fmtInt=n=>Math.round(n).toLocaleString('pt-BR');
+const splitMoney=n=>{const s=n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});const i=s.lastIndexOf(',');return[s.slice(0,i),s.slice(i)];};
+const dm=d=>String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
+
+function splitCSV(text){const rows=[];let row=[];let cur='';let q=false;for(let i=0;i<text.length;i++){const c=text[i];if(q){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=c;}else{if(c==='"')q=true;else if(c===','){row.push(cur);cur='';}else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}else if(c==='\r'){}else cur+=c;}}if(cur.length||row.length){row.push(cur);rows.push(row);}return rows;}
+function brMoney(s){if(s==null)return 0;s=String(s).trim();if(!s)return 0;s=s.replace(/R\$/g,'').replace(/\s/g,'').replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n;}
+const isDate=s=>/^\d{2}\/\d{2}\/\d{4}$/.test(String(s||'').trim());
+const isMoney=s=>/R\$/.test(String(s||''));
+const parseDate=s=>{const[d,m,y]=s.split('/').map(Number);return new Date(y,m-1,d);};
+const WD=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];const WD_FULL=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+function ym(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+
+async function fetchCSV(){
+  const base=CFG.csvUrl;const bust=(base.includes('?')?'&':'?')+'cb='+Date.now();
+  const targets=[base+bust,'https://corsproxy.io/?url='+encodeURIComponent(base+bust),'https://api.allorigins.win/raw?url='+encodeURIComponent(base+bust)];
+  let lastErr;
+  for(const u of targets){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const t=await r.text();if(t&&t.length>50&&/Data|Balcão|\d{2}\/\d{2}/.test(t))return t;throw new Error('vazio');}catch(e){lastErr=e;}}
+  throw lastErr||new Error('falha');
+}
+
+function parseAll(text){
+  const rows=splitCSV(text);const recs=[];let store=null;
+  for(const r of rows){const a=(r[0]||'').trim();if(!a)continue;
+    if(isDate(a)){if(!store)continue;recs.push({loja:store,data:a,dateObj:parseDate(a),dia:(r[1]||'').trim(),balcaoTotal:brMoney(r[2]),balcaoQ:parseInt(r[3])||0,encTotal:brMoney(r[5]),encQ:parseInt(r[6])||0,total:brMoney(r[14])});}
+    else if(isMoney(a))continue;
+    else if(a==='Data'||a==='Total'||a==='Média'||a==='Totais'||/Página/i.test(a))continue;
+    else store=a;}
+  return recs;
+}
+
+function aggregate(allRecs){
+  // janela de análise
+  const allDates=[...new Set(allRecs.map(r=>r.data))].map(parseDate).sort((a,b)=>a-b);
+  const last=allDates[allDates.length-1];
+  const cutoff=new Date(last);cutoff.setDate(cutoff.getDate()-(CFG.periodoDias-1));
+  const recs=allRecs.filter(r=>r.dateObj>=cutoff);
+  const A={recs,allRecs};
+  A.lojas=[...new Set(recs.map(r=>r.loja))];
+  A.datasObj=[...new Set(recs.map(r=>r.data))].map(parseDate).sort((a,b)=>a-b);
+  A.nDias=A.datasObj.length;
+  A.firstDate=A.datasObj[0];A.lastDate=A.datasObj[A.datasObj.length-1];
+  A.fat=recs.reduce((s,r)=>s+r.total,0);
+  A.balcao=recs.reduce((s,r)=>s+r.balcaoTotal,0);A.enc=recs.reduce((s,r)=>s+r.encTotal,0);
+  A.balcaoQ=recs.reduce((s,r)=>s+r.balcaoQ,0);A.encQ=recs.reduce((s,r)=>s+r.encQ,0);
+  A.ped=A.balcaoQ+A.encQ;A.ticket=A.ped?A.fat/A.ped:0;A.diaria=A.nDias?A.fat/A.nDias:0;
+  const byL={};recs.forEach(r=>{const o=byL[r.loja]||(byL[r.loja]={fat:0,ped:0});o.fat+=r.total;o.ped+=r.balcaoQ+r.encQ;});
+  A.rank=Object.entries(byL).map(([l,o])=>({loja:l,...o})).sort((a,b)=>b.fat-a.fat);
+  A.avgLoja=A.lojas.length?A.fat/A.lojas.length:0;
+  A.vsAvg=A.rank.map(r=>({loja:r.loja,fat:r.fat,pct:A.avgLoja?(r.fat-A.avgLoja)/A.avgLoja*100:0}));
+  const byD={};recs.forEach(r=>{byD[r.data]=(byD[r.data]||0)+r.total;});
+  A.porData=Object.entries(byD).map(([d,v])=>({data:d,v,dateObj:parseDate(d)})).sort((a,b)=>a.dateObj-b.dateObj);
+  A.best=A.porData.reduce((m,x)=>x.v>m.v?x:m,A.porData[0]);
+  A.worst=A.porData.reduce((m,x)=>x.v<m.v?x:m,A.porData[0]);
+  const dowSum={};A.porData.forEach(x=>{const k=x.dateObj.getDay();dowSum[k]=(dowSum[k]||0)+x.v;});
+  A.dow=[1,2,3,4,5,6,0].map(k=>({k,nome:WD[k],v:dowSum[k]||0}));
+  A.cmp=buildComparativo(allRecs,A,cutoff);
+  A.proj=buildProjecao(allRecs,A);
+  return A;
+}
+
+function buildComparativo(allRecs,A,cutoff){
+  // período atual = janela; anterior = janela imediatamente antes
+  const N=CFG.periodoDias;
+  const prevEnd=new Date(cutoff);prevEnd.setDate(prevEnd.getDate()-1);
+  const prevStart=new Date(prevEnd);prevStart.setDate(prevStart.getDate()-(N-1));
+  let curRecs=A.recs;
+  let prevRecs=allRecs.filter(r=>r.dateObj>=prevStart&&r.dateObj<=prevEnd);
+  let labelCur,labelPrev;
+  const sum=rs=>rs.reduce((s,r)=>s+r.total,0);
+  if(prevRecs.length){
+    labelCur='Período atual ('+A.nDias+' dias)';
+    const pd=new Set(prevRecs.map(r=>r.data)).size;
+    labelPrev=pd+' dias anteriores';
+  }else{
+    // fallback: metade vs metade da janela
+    const datas=A.porData.map(x=>x.data);const half=Math.floor(datas.length/2)||1;
+    const curD=new Set(datas.slice(-half));const prevD=new Set(datas.slice(-(half*2),-half));
+    curRecs=A.recs.filter(r=>curD.has(r.data));prevRecs=A.recs.filter(r=>prevD.has(r.data));
+    labelCur='Últimos '+half+' dias';labelPrev=prevD.size+' dias anteriores';
   }
-  window.consultarCliente = consultarCliente;
+  const out={cur:sum(curRecs),prev:sum(prevRecs),labelCur,labelPrev};
+  out.delta=out.prev?((out.cur-out.prev)/out.prev*100):0;
+  const cl={},pl={};curRecs.forEach(r=>cl[r.loja]=(cl[r.loja]||0)+r.total);prevRecs.forEach(r=>pl[r.loja]=(pl[r.loja]||0)+r.total);
+  const mv=[];for(const l of A.lojas){const c=cl[l]||0,p=pl[l]||0;if(p>0)mv.push({loja:l,pct:(c-p)/p*100,c,p});}
+  mv.sort((a,b)=>b.pct-a.pct);
+  out.up=mv.slice(0,6);out.down=mv.slice(-6).reverse();
+  return out;
+}
 
-  /**
-   * Renderiza a lista de todos os clientes na tela Clientes.
-   */
-  function renderizarClientes(docs) {
-    const el = document.getElementById('lista-clientes');
+function buildProjecao(allRecs,A){
+  const mesAtual=ym(A.lastDate);
+  const recMes=allRecs.filter(r=>ym(r.dateObj)===mesAtual);
+  const diasDecorridos=new Set(recMes.map(r=>r.data)).size||1;
+  const ref=A.lastDate;const totDiasMes=new Date(ref.getFullYear(),ref.getMonth()+1,0).getDate();
+  const fator=totDiasMes/diasDecorridos;
+  const byL={};recMes.forEach(r=>byL[r.loja]=(byL[r.loja]||0)+r.total);
+  const lojas=Object.entries(byL).map(([l,real])=>({loja:l,real,proj:real*fator})).sort((a,b)=>b.proj-a.proj);
+  const realizadoRede=recMes.reduce((s,r)=>s+r.total,0);
+  const projRede=realizadoRede*fator;
+  return {lojas,realizadoRede,projRede,diasDecorridos,totDiasMes,mesAtual,fator};
+}
 
-    if (docs.length === 0) {
-      el.innerHTML = `<div class="lista-vazia">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
-        <p>Nenhum cliente cadastrado.</p></div>`;
-      return;
-    }
+/* COUNT-UP */
+function countUp(el,to,fmt,ms=1000){const from=el._cur||0;el._cur=to;const t0=performance.now();function step(t){const p=Math.min((t-t0)/ms,1);const e=1-Math.pow(1-p,3);el.innerHTML=fmt(from+(to-from)*e);if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+function kpiMoney(el,to){countUp(el,to,v=>{const[i,c]=splitMoney(v);return'R$ '+i+'<span class="cents">'+c+'</span>';});}
 
-    el.innerHTML = docs.map(c => `
-      <div class="cliente-card">
-        <div class="cliente-avatar">${iniciais(c.nome)}</div>
-        <div class="cliente-card-info">
-          <div class="cliente-card-nome">${c.nome}</div>
-          <div class="cliente-card-tel">📱 ${c.telefone}</div>
-        </div>
-        <div class="cliente-card-saldo">
-          <div class="cliente-saldo-valor">${formatarMoeda(c.saldo_cashback || 0)}</div>
-          <div class="cliente-saldo-label">cashback</div>
-        </div>
-      </div>`).join('');
+/* RENDER */
+let DATA=null;
+function render(A){
+  DATA=A;
+  kpiMoney(document.querySelector('[data-kpi=fat]'),A.fat);
+  document.getElementById('fat-foot').textContent=A.nDias+' dias · '+A.lojas.length+' lojas';
+  countUp(document.querySelector('[data-kpi=ticket]'),A.ticket,v=>{const[i,c]=splitMoney(v);return'R$ '+i+'<span class="cents">'+c+'</span>';});
+  countUp(document.querySelector('[data-kpi=ped]'),A.ped,v=>fmtInt(v));
+  kpiMoney(document.querySelector('[data-kpi=diaria]'),A.diaria);
+
+  const mixWrap=document.getElementById('mixWrap');
+  const mixData=[{nome:'Balcão',v:A.balcao,q:A.balcaoQ,col:'linear-gradient(90deg,var(--brand),var(--gold))'},{nome:'Encomenda',v:A.enc,q:A.encQ,col:'linear-gradient(90deg,var(--blue),#6fa8e8)'}];
+  mixWrap.innerHTML=mixData.map(m=>{const pc=A.fat?(m.v/A.fat*100):0;return`<div class="mix-bar"><div class="top"><span class="nm">${m.nome}</span><span class="pc num">${pc.toFixed(1)}%</span></div><div class="track"><div class="fill" style="background:${m.col}" data-w="${pc}"></div></div><div class="sub num">${fmtBRL(m.v)} · ${fmtInt(m.q)} pedidos · ticket ${fmtBRL(m.q?m.v/m.q:0)}</div></div>`;}).join('');
+
+  const sb=document.getElementById('sparkBars');const sd=A.porData.slice(-14);const mx=Math.max(...sd.map(x=>x.v),1);
+  sb.innerHTML=sd.map(x=>`<div class="b ${x.v===A.best.v?'peak':''}"><span class="v num">${fmtBRLk(x.v)}</span><div class="bar" data-h="${x.v/mx*90}"></div><span class="d">${dm(x.dateObj)}</span></div>`).join('');
+
+  const rl=document.getElementById('rankList');const maxF=A.rank[0]?.fat||1;
+  rl.innerHTML=A.rank.map((r,i)=>{const cls=i===0?'top1':i===1?'top2':i===2?'top3':'';const share=A.fat?(r.fat/A.fat*100):0;
+    return`<div class="rkr ${cls}"><div class="pos">${i+1}</div><div class="nm">${r.loja}</div><div class="track"><div class="fill" data-w="${r.fat/maxF*100}"></div></div><div class="v num">${fmtBRLk(r.fat)}</div><div class="s num">${share.toFixed(1)}% · ${fmtInt(r.ped)} ped</div></div>`;}).join('');
+
+  const db=document.getElementById('dowBars');const mxd=Math.max(...A.dow.map(x=>x.v),1);
+  db.innerHTML=A.dow.map(x=>`<div class="b ${x.v===mxd?'hi':''}"><span class="v num">${fmtBRLk(x.v)}</span><div class="bar" data-h="${x.v/mxd*88}"></div><span class="d">${x.nome}</span></div>`).join('');
+  const dn=x=>WD_FULL[x.dateObj.getDay()]+' '+dm(x.dateObj);
+  document.getElementById('bestDay').innerHTML=`<div class="lbl">▲ Melhor dia do período</div><div class="big">${fmtBRL(A.best.v)}</div><div class="v">${dn(A.best)}</div>`;
+  document.getElementById('worstDay').innerHTML=`<div class="lbl">▼ Dia mais fraco</div><div class="big">${fmtBRL(A.worst.v)}</div><div class="v">${dn(A.worst)}</div>`;
+  document.getElementById('modBalcao').innerHTML=modCard('Balcão','tag',A.balcao,A.balcaoQ,A.fat);
+  document.getElementById('modEnc').innerHTML=modCard('Encomenda','tag e',A.enc,A.encQ,A.fat);
+
+  // vs MÉDIA
+  document.getElementById('avgHead').innerHTML=`<div><div class="lbl">Média de faturamento por loja na rede</div><div class="v num">${fmtBRLk(A.avgLoja)}</div></div><div class="note">Cada loja comparada à média da rede no período. Verde = acima · Vermelho = abaixo.</div>`;
+  const above=A.vsAvg.filter(x=>x.pct>=0).slice(0,7);
+  const below=A.vsAvg.filter(x=>x.pct<0).slice(-7).reverse();
+  document.getElementById('avgUp').innerHTML=`<div class="h" style="color:var(--green)">▲ Acima da média da rede</div><div class="list">`+
+    above.map(x=>`<div class="avgr"><span class="nm">${x.loja}</span><span class="fv num">${fmtBRLk(x.fat)}</span><span class="pct up">+${x.pct.toFixed(0)}%</span></div>`).join('')+`</div>`;
+  document.getElementById('avgDown').innerHTML=`<div class="h" style="color:var(--red)">▼ Abaixo da média da rede</div><div class="list">`+
+    below.map(x=>`<div class="avgr"><span class="nm">${x.loja}</span><span class="fv num">${fmtBRLk(x.fat)}</span><span class="pct down">${x.pct.toFixed(0)}%</span></div>`).join('')+`</div>`;
+
+  // COMPARATIVO
+  const c=A.cmp;const up=c.delta>=0;
+  document.getElementById('cmpCard').innerHTML=`<div class="blk"><div class="lbl">${c.labelPrev}</div><div class="v num">${fmtBRLk(c.prev)}</div></div><div class="arrow ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(c.delta).toFixed(1)}%</div><div class="blk"><div class="lbl">${c.labelCur}</div><div class="v num">${fmtBRLk(c.cur)}</div></div><div class="ctx">A rede ${up?'cresceu':'recuou'} ${Math.abs(c.delta).toFixed(1)}% frente ao período anterior de mesmo tamanho.</div>`;
+  document.getElementById('moversUp').innerHTML=`<div class="h" style="color:var(--green)">🚀 Maiores altas</div><div class="list">`+
+    c.up.map((m,i)=>`<div class="mv"><span class="rk">${i+1}</span><span class="nm">${m.loja}</span><span class="pct up">▲ ${m.pct.toFixed(0)}%</span></div>`).join('')+`</div>`;
+  document.getElementById('moversDown').innerHTML=`<div class="h" style="color:var(--red)">⚠ Maiores quedas</div><div class="list">`+
+    c.down.map((m,i)=>`<div class="mv"><span class="rk">${i+1}</span><span class="nm">${m.loja}</span><span class="pct down">▼ ${Math.abs(m.pct).toFixed(0)}%</span></div>`).join('')+`</div>`;
+
+  // PROJEÇÃO
+  const pj=A.proj;const pctMeta=CFG.meta?(pj.projRede/CFG.meta*100):0;
+  document.getElementById('projHead').innerHTML=`
+    <div class="it"><div class="lbl">Realizado no mês</div><div class="v num">${fmtBRLk(pj.realizadoRede)}</div></div>
+    <div class="it"><div class="lbl">Projeção fim do mês</div><div class="v num" style="color:var(--brand)">${fmtBRLk(pj.projRede)}</div></div>
+    <div class="it"><div class="lbl">Meta do mês</div><div class="v num">${fmtBRLk(CFG.meta)}</div></div>
+    <div class="it"><div class="lbl">${pj.diasDecorridos} de ${pj.totDiasMes} dias</div><div class="v num">${(pj.diasDecorridos/pj.totDiasMes*100).toFixed(0)}% do mês</div></div>
+    <div class="gauge">${gauge(pctMeta)}</div>`;
+  const maxProj=pj.lojas[0]?.proj||1;
+  document.getElementById('projList').innerHTML=pj.lojas.map((l,i)=>`<div class="pjr"><div class="pos">${i+1}</div><div class="nm">${l.loja}</div><div class="track"><div class="fill-proj" data-w="${l.proj/maxProj*100}"></div><div class="fill-real" data-w="${l.real/maxProj*100}"></div></div><div class="real num">${fmtBRLk(l.real)}</div><div class="proj num">${fmtBRLk(l.proj)}</div></div>`).join('');
+
+  // TICKER + período
+  const periodLabel='ÚLTIMOS '+A.nDias+' DIAS · '+dm(A.firstDate)+'–'+dm(A.lastDate);
+  document.getElementById('tickerPeriod').textContent=periodLabel;
+  buildTicker(A);
+  if(slides[idx])animateActive(slides[idx]);
+}
+function modCard(nome,tagcls,tot,q,fat){const tk=q?tot/q:0;const sh=fat?tot/fat*100:0;return`<div class="h"><span class="${tagcls}"></span>${nome}</div><div class="grid"><div class="it"><div class="k">Faturamento</div><div class="n num">${fmtBRLk(tot)}</div></div><div class="it"><div class="k">Participação</div><div class="n num">${sh.toFixed(0)}%</div></div><div class="it"><div class="k">Pedidos</div><div class="n num">${fmtInt(q)}</div></div><div class="it"><div class="k">Ticket médio</div><div class="n num">${fmtBRL(tk)}</div></div></div>`;}
+function gauge(pct){const p=Math.max(0,Math.min(pct,150));const r=44;const C=2*Math.PI*r;const frac=Math.min(p,100)/100;const col=p>=100?'var(--green)':p>=80?'var(--gold)':'var(--red)';
+  return`<svg viewBox="0 0 120 120" style="width:100%;height:100%;transform:rotate(135deg)"><circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--bg-2)" stroke-width="11" stroke-dasharray="${C*0.75} ${C}" stroke-linecap="round"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${col}" stroke-width="11" stroke-dasharray="${C*0.75*frac} ${C}" stroke-linecap="round"/><text x="60" y="58" text-anchor="middle" transform="rotate(-135 60 60)" font-family="Outfit" font-weight="900" font-size="26" fill="var(--ink)">${Math.round(pct)}%</text><text x="60" y="78" text-anchor="middle" transform="rotate(-135 60 60)" font-family="Inter" font-weight="700" font-size="9" fill="var(--ink-2)">DA META</text></svg>`;}
+function buildTicker(A){
+  const lastData=A.porData[A.porData.length-1].data;
+  const lastMap={};A.recs.filter(r=>r.data===lastData).forEach(r=>lastMap[r.loja]=r.total);
+  const avg={};A.lojas.forEach(l=>{const rs=A.recs.filter(r=>r.loja===l);avg[l]=rs.reduce((s,r)=>s+r.total,0)/(new Set(rs.map(r=>r.data)).size||1);});
+  const items=A.lojas.map(l=>{const v=lastMap[l]||0;const a=avg[l]||0;const ch=a?(v-a)/a*100:0;const up=ch>=0;return`<div class="ti"><span class="nm">${l}</span><span class="v">${fmtBRLk(v)}</span><span class="ch ${up?'up':'down'}">${up?'▲':'▼'} ${Math.abs(ch).toFixed(1)}%</span></div>`;}).join('');
+  const tape=document.getElementById('tape');tape.innerHTML=items+items;
+  // velocidade do scroll horizontal proporcional ao conteúdo
+  tape.style.animation='none';void tape.offsetWidth;
+  const dur=Math.max(40,A.lojas.length*3.2);
+  tape.style.animation=`scroll ${dur}s linear infinite`;
+}
+// keyframes do tape via JS (precisa existir)
+const styleEl=document.createElement('style');styleEl.textContent='@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}';document.head.appendChild(styleEl);
+
+/* ANIMAÇÃO DE ENTRADA + barras */
+function animateActive(slide){
+  const cards=[...slide.querySelectorAll('.card')];
+  cards.forEach((c,i)=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';c.style.animationDelay=(i*0.05)+'s';});
+  slide.querySelectorAll('[data-w]').forEach((f,i)=>{f.style.transitionDelay=(i*18)+'ms';f.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>f.style.width=f.dataset.w+'%'));});
+  slide.querySelectorAll('[data-h]').forEach((b,i)=>{b.style.transitionDelay=(i*30)+'ms';b.style.height='0';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.height=b.dataset.h+'%'));});
+}
+
+/* CARROSSEL + AUTOSCROLL + PAUSE */
+let slides=[],dots=[],idx=0,rotStart=0,paused=false,rafId=null;
+function setupSlides(){
+  const all=[...document.querySelectorAll('.slide')];
+  slides=all.filter(s=>CFG.slides[s.id]);
+  all.forEach(s=>s.style.display=CFG.slides[s.id]?'':'none');
+  const dc=document.getElementById('dots');dc.innerHTML='';dots=[];
+  slides.forEach((_,i)=>{const d=document.createElement('div');d.className='d'+(i===0?' on':'');dc.appendChild(d);dots.push(d);});
+  if(idx>=slides.length)idx=0;
+  showSlide(idx);
+}
+function showSlide(i){
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  if(!slides.length)return;
+  idx=(i+slides.length)%slides.length;
+  const s=slides[idx];s.classList.add('active');
+  document.getElementById('slideName').textContent=s.dataset.name;
+  dots.forEach((d,j)=>d.classList.toggle('on',j===idx));
+  const sc=s.querySelector('.autoscroll');if(sc)sc.scrollTop=0;
+  rotStart=performance.now();
+  if(DATA)animateActive(s);
+}
+function loop(now){
+  if(!paused&&slides.length){
+    const dur=CFG.rotSec*1000;const el=now-rotStart;const p=Math.min(el/dur,1);
+    document.getElementById('rot').style.width=(p*100)+'%';
+    const sc=slides[idx]?.querySelector('.autoscroll');
+    if(sc){const max=sc.scrollHeight-sc.clientHeight;if(max>0)sc.scrollTop=p*max;}
+    if(p>=1)showSlide(idx+1);
   }
-
-  // ============================================================
-  // MÓDULO: FINALIZAR VENDA
-  // Usa runTransaction para garantir consistência no Firestore:
-  // - Lê o saldo atual do cliente em tempo real
-  // - Subtrai o saldo usado e soma o cashback gerado
-  // - Salva o documento de venda
-  // Tudo isso de forma atômica (tudo junto ou nada).
-  // ============================================================
-
-  async function finalizarVenda() {
-    if (carrinho.length === 0) {
-      mostrarToast('Carrinho vazio!', 'erro');
-      return;
-    }
-
-    const btn = document.getElementById('btn-finalizar');
-    btn.disabled = true;
-    btn.innerHTML = '<div class="spinner"></div> Finalizando...';
-
-    try {
-      // Calcula os valores da venda
-      const subtotal = carrinho.reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
-      const baseParaCashback = carrinho
-        .filter(i => i.gera_cashback)
-        .reduce((s, i) => s + i.preco_unitario * i.qtd, 0);
-      const cashbackGerado = parseFloat((baseParaCashback * PERCENTUAL_CASHBACK).toFixed(2));
-
-      const usarCash = document.getElementById('usar-cashback').checked && clienteAtual !== null;
-
-      // Executa a transação atômica no Firestore
-      await runTransaction(db, async (transaction) => {
-        let cashbackUsado    = 0;
-        let novoSaldo        = null;
-        let clienteDocRef    = null;
-        let saldoAtualBanco  = 0;
-
-        // Se há cliente identificado, lemos seu saldo DENTRO da transação
-        // (garante que o saldo não mudou entre a leitura anterior e agora)
-        if (clienteAtual) {
-          clienteDocRef   = doc(db, 'clientes', clienteAtual.id);
-          const clienteSnap = await transaction.get(clienteDocRef);
-          saldoAtualBanco   = clienteSnap.data().saldo_cashback || 0;
-
-          if (usarCash) {
-            cashbackUsado = Math.min(saldoAtualBanco, subtotal);
-          }
-
-          // Novo saldo = saldo atual - cashback usado + cashback gerado nesta venda
-          novoSaldo = parseFloat((saldoAtualBanco - cashbackUsado + cashbackGerado).toFixed(2));
-        }
-
-        const totalPago = parseFloat((subtotal - (usarCash ? cashbackUsado : 0)).toFixed(2));
-
-        // Monta o objeto da venda conforme o modelo de dados
-        const vendaData = {
-          data_hora:       serverTimestamp(),
-          cliente_id:      clienteAtual ? clienteAtual.id : null,
-          itens:           carrinho.map(i => ({
-            produto_id:    i.produto_id,
-            qtd:           i.qtd,
-            preco_unitario: i.preco_unitario
-          })),
-          total_bruto:     parseFloat(subtotal.toFixed(2)),
-          cashback_usado:  usarCash ? parseFloat(cashbackUsado.toFixed(2)) : 0,
-          total_pago:      totalPago,
-          cashback_gerado: cashbackGerado
-        };
-
-        // Cria o documento de venda na coleção "vendas"
-        const vendaRef = doc(collection(db, 'vendas'));
-        transaction.set(vendaRef, vendaData);
-
-        // Atualiza o saldo do cliente (se identificado)
-        if (clienteDocRef && novoSaldo !== null) {
-          transaction.update(clienteDocRef, { saldo_cashback: novoSaldo });
-        }
-      });
-
-      // Sucesso! Limpa o estado da venda
-      mostrarToast('✅ Venda finalizada com sucesso!', 'sucesso');
-      carrinho = [];
-      clienteAtual = null;
-      document.getElementById('input-tel-cliente').value  = '';
-      document.getElementById('info-cliente').style.display = 'none';
-      document.getElementById('usar-cashback').checked    = false;
-      atualizarCarrinho();
-
-    } catch (err) {
-      console.error('Erro ao finalizar venda:', err);
-      mostrarToast('Erro ao finalizar venda. Tente novamente.', 'erro');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '✅ Finalizar Venda';
-    }
+  rafId=requestAnimationFrame(loop);
+}
+function togglePause(){
+  paused=!paused;
+  document.getElementById('playBtn').textContent=paused?'▶':'⏸';
+  document.getElementById('paused-badge').classList.toggle('show',paused);
+  if(!paused){ // retoma de onde parou
+    const dur=CFG.rotSec*1000;const sc=slides[idx]?.querySelector('.autoscroll');
+    // recalcula rotStart pela posição de scroll atual p/ continuar suave
+    if(sc){const max=sc.scrollHeight-sc.clientHeight;const p=max>0?sc.scrollTop/max:0;rotStart=performance.now()-p*dur;}
+    else rotStart=performance.now()-(parseFloat(document.getElementById('rot').style.width)||0)/100*dur;
   }
-  window.finalizarVenda = finalizarVenda;
+}
+document.getElementById('playBtn').onclick=togglePause;
 
-  // ============================================================
-  // LISTENERS EM TEMPO REAL (onSnapshot)
-  // Mantém as listas atualizadas automaticamente sem recarregar.
-  // ============================================================
+function tickClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('pt-BR');}
+setInterval(tickClock,1000);tickClock();
 
-  /**
-   * Listener de Categorias:
-   * Atualiza a lista e o select de produtos toda vez que há mudança.
-   */
-  onSnapshot(collection(db, 'categorias'), (snapshot) => {
-    categoriasCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+let refreshTimer=null;
+async function refresh(){
+  try{
+    const txt=await fetchCSV();const recs=parseAll(txt);if(!recs.length)throw new Error('sem registros');
+    render(aggregate(recs));
+    document.getElementById('lastUpd').textContent='às '+new Date().toLocaleTimeString('pt-BR');
+    document.getElementById('err').style.display='none';
+    const f=document.getElementById('flash');f.classList.add('show');setTimeout(()=>f.classList.remove('show'),2200);
+  }catch(e){const er=document.getElementById('err');er.textContent='⚠ Sem conexão com a planilha — mantendo últimos dados. ('+e.message+')';er.style.display='block';}
+}
+function startRefresh(){clearInterval(refreshTimer);refreshTimer=setInterval(refresh,CFG.refreshSec*1000);}
 
-    // Renderiza lista de categorias
-    renderizarCategorias(categoriasCache);
+/* CONFIG UI */
+const cfgEl=document.getElementById('cfg');
+document.getElementById('gearBtn').onclick=()=>{fillCfg();cfgEl.classList.add('open');};
+document.getElementById('cfgClose').onclick=()=>cfgEl.classList.remove('open');
+cfgEl.onclick=e=>{if(e.target===cfgEl)cfgEl.classList.remove('open');};
+const SLIDE_NAMES={s1:'Visão Geral',s2:'Ranking',s3:'Dias & Modalidades',s4:'vs. Média',s5:'Comparativo',s6:'Projeção'};
+function fillCfg(){
+  document.getElementById('cfgMeta').value=CFG.meta;
+  document.getElementById('cfgRot').value=CFG.rotSec;
+  document.getElementById('cfgRefresh').value=CFG.refreshSec;
+  document.getElementById('cfgUrl').value=CFG.csvUrl;
+  document.querySelectorAll('#cfgPeriodo button').forEach(b=>b.classList.toggle('on',+b.dataset.p===CFG.periodoDias));
+  const sc=document.getElementById('cfgSlides');sc.innerHTML='';
+  Object.keys(SLIDE_NAMES).forEach(k=>{const lab=document.createElement('label');lab.className='chk';lab.innerHTML=`<input type="checkbox" ${CFG.slides[k]?'checked':''} data-s="${k}"> ${SLIDE_NAMES[k]}`;sc.appendChild(lab);});
+  document.querySelectorAll('#cfgTheme button').forEach(b=>b.classList.toggle('on',b.dataset.t===CFG.theme));
+}
+document.querySelectorAll('#cfgPeriodo button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#cfgPeriodo button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+document.querySelectorAll('#cfgTheme button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#cfgTheme button').forEach(x=>x.classList.remove('on'));b.classList.add('on');});
+document.getElementById('cfgSave').onclick=()=>{
+  CFG.meta=+document.getElementById('cfgMeta').value||DEFAULTS.meta;
+  CFG.rotSec=Math.max(10,+document.getElementById('cfgRot').value||DEFAULTS.rotSec);
+  CFG.refreshSec=Math.max(15,+document.getElementById('cfgRefresh').value||DEFAULTS.refreshSec);
+  CFG.csvUrl=document.getElementById('cfgUrl').value.trim()||DEFAULTS.csvUrl;
+  CFG.periodoDias=+document.querySelector('#cfgPeriodo button.on').dataset.p;
+  document.querySelectorAll('#cfgSlides input').forEach(i=>CFG.slides[i.dataset.s]=i.checked);
+  if(!Object.values(CFG.slides).some(Boolean))CFG.slides.s1=true;
+  CFG.theme=document.querySelector('#cfgTheme button.on').dataset.t;
+  document.documentElement.setAttribute('data-theme',CFG.theme);
+  saveCfg();setupSlides();startRefresh();refresh();cfgEl.classList.remove('open');
+};
+document.getElementById('cfgReset').onclick=()=>{CFG=JSON.parse(JSON.stringify(DEFAULTS));saveCfg();fillCfg();document.documentElement.setAttribute('data-theme',CFG.theme);setupSlides();startRefresh();refresh();};
 
-    // Atualiza o select de categoria no formulário de produtos
-    const sel = document.getElementById('select-cat-prod');
-    sel.innerHTML = '<option value="">Selecione uma categoria...</option>' +
-      categoriasCache.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight')showSlide(idx+1);
+  if(e.key==='ArrowLeft')showSlide(idx-1);
+  if(e.key==='r'||e.key==='R')refresh();
+  if(e.key===' '){e.preventDefault();togglePause();}
+});
 
-    // Re-renderiza os produtos para refletir os nomes das categorias
-    renderizarProdutos(produtosCache);
-  });
-
-  /**
-   * Listener de Produtos:
-   * Atualiza o grid do PDV e a lista de cadastro automaticamente.
-   */
-  onSnapshot(collection(db, 'produtos'), (snapshot) => {
-    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderizarProdutos(docs);
-  });
-
-  /**
-   * Listener de Clientes:
-   * Atualiza a lista de clientes automaticamente.
-   */
-  onSnapshot(collection(db, 'clientes'), (snapshot) => {
-    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderizarClientes(docs);
-  });
-
-  // ============================================================
-  // UTILITÁRIO: MÁSCARA DE TELEFONE
-  // Formata automaticamente o input de telefone enquanto o usuário digita.
-  // ============================================================
-  function aplicarMascaraTelefone(input) {
-    input.addEventListener('input', () => {
-      let v = input.value.replace(/\D/g, '');
-      if (v.length <= 10) {
-        v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-      } else {
-        v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
-      }
-      input.value = v;
-    });
-  }
-
-  // Aplica máscara em todos os campos de telefone
-  ['input-tel-cliente', 'input-tel-novo-cliente', 'input-tel-consulta'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) aplicarMascaraTelefone(el);
-  });
-
+/* BOOT */
+setupSlides();
+rafId=requestAnimationFrame(loop);
+startRefresh();
+refresh();
 </script>
 </body>
 </html>
